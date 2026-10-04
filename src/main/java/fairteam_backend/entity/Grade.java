@@ -1,22 +1,47 @@
 package fairteam_backend.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+
+@Entity
+@Table(
+    name = "grades",
+    uniqueConstraints = {
+        @UniqueConstraint(
+            name = "uq_student_subject_period",
+            columnNames = {"student_id", "subject_id", "period"}
+        )
+    }
+)
 public class Grade {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long studentId;
-    private Long subjectId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_id", nullable = false)
+    private Student student;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "subject_id", nullable = false)
+    private Subject subject;
+
+    @Column(nullable = false)
     private Double grade;
+
+    @Column(nullable = false, length = 20)
     private String period;
 
     public Grade() {
-    }
-
-    public Grade(Long id, Long studentId, Long subjectId, Double grade, String period) {
-        this.id = id;
-        this.studentId = studentId;
-        this.subjectId = subjectId;
-        this.grade = grade;
-        this.period = period;
     }
 
     public Long getId() {
@@ -27,20 +52,20 @@ public class Grade {
         this.id = id;
     }
 
-    public Long getStudentId() {
-        return studentId;
+    public Student getStudent() {
+        return student;
     }
 
-    public void setStudentId(Long studentId) {
-        this.studentId = studentId;
+    public void setStudent(Student student) {
+        this.student = student;
     }
 
-    public Long getSubjectId() {
-        return subjectId;
+    public Subject getSubject() {
+        return subject;
     }
 
-    public void setSubjectId(Long subjectId) {
-        this.subjectId = subjectId;
+    public void setSubject(Subject subject) {
+        this.subject = subject;
     }
 
     public Double getGrade() {
