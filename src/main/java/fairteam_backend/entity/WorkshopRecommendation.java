@@ -1,5 +1,5 @@
 package fairteam_backend.entity;
-
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -33,7 +33,7 @@ public class WorkshopRecommendation {
     private String reason;
 
     @Column(name = "recommendation_score", precision = 5, scale = 2)
-    private Double recommendationScore;
+    private BigDecimal recommendationScore;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -78,11 +78,11 @@ public class WorkshopRecommendation {
         this.reason = reason;
     }
 
-    public Double getRecommendationScore() {
+    public BigDecimal getRecommendationScore() {
         return recommendationScore;
     }
 
-    public void setRecommendationScore(Double recommendationScore) {
+    public void setRecommendationScore(BigDecimal recommendationScore) {
         this.recommendationScore = recommendationScore;
     }
 

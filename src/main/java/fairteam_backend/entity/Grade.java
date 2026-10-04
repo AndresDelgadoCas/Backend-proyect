@@ -1,4 +1,5 @@
 package fairteam_backend.entity;
+import java.math.BigDecimal;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -9,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 
 @Entity
@@ -35,13 +37,28 @@ public class Grade {
     @JoinColumn(name = "subject_id", nullable = false)
     private Subject subject;
 
-    @Column(nullable = false)
-    private Double grade;
+    @Column(nullable = false, precision = 3, scale = 2)
+    private BigDecimal grade;
 
     @Column(nullable = false, length = 20)
     private String period;
 
     public Grade() {
+    }
+
+    public Grade(Long id, Long studentId, Long subjectId, Double grade, String period) {
+        this.id = id;
+
+        Student student = new Student();
+        student.setId(studentId);
+        this.student = student;
+
+        Subject subject = new Subject();
+        subject.setId(subjectId);
+        this.subject = subject;
+
+        this.grade = BigDecimal.valueOf(grade);
+        this.period = period;
     }
 
     public Long getId() {
@@ -68,11 +85,11 @@ public class Grade {
         this.subject = subject;
     }
 
-    public Double getGrade() {
+    public BigDecimal getGrade() {
         return grade;
     }
 
-    public void setGrade(Double grade) {
+    public void setGrade(BigDecimal grade) {
         this.grade = grade;
     }
 
@@ -82,5 +99,15 @@ public class Grade {
 
     public void setPeriod(String period) {
         this.period = period;
+    }
+
+    @Transient
+    public Long getStudentId() {
+        return student != null ? student.getId() : null;
+    }
+
+    @Transient
+    public Long getSubjectId() {
+        return subject != null ? subject.getId() : null;
     }
 }

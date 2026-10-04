@@ -1,5 +1,6 @@
 package fairteam_backend.entity;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -32,7 +33,7 @@ public class Team {
     private String formationStrategy;
 
     @Column(precision = 5, scale = 2)
-    private Double score;
+    private BigDecimal score;
 
     @Column(columnDefinition = "TEXT")
     private String explanation;
@@ -80,11 +81,11 @@ public class Team {
         this.formationStrategy = formationStrategy;
     }
 
-    public Double getScore() {
+    public BigDecimal getScore() {
         return score;
     }
 
-    public void setScore(Double score) {
+    public void setScore(BigDecimal score) {
         this.score = score;
     }
 
