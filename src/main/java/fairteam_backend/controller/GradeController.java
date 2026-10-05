@@ -1,5 +1,8 @@
 package fairteam_backend.controller;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -11,7 +14,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import fairteam_backend.entity.Grade;
 import fairteam_backend.service.GradeService;
@@ -48,6 +53,7 @@ public class GradeController {
     public ResponseEntity<Grade> update(
             @PathVariable Long id,
             @RequestBody Grade grade) {
+
         return ResponseEntity.ok(service.update(id, grade));
     }
 
@@ -55,5 +61,33 @@ public class GradeController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/import")
+    public ResponseEntity<List<Grade>> importGrades(
+            @RequestParam("file") MultipartFile file) {
+
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        try {
+            Path tempFile = Files.createTempFile(
+                    "fairteam-grades-",
+                    ".csv"
+            );
+
+            file.transferTo(tempFile.toFile());
+
+            List<Grade> grades =
+                    service.importFromCsv(tempFile.toString());
+
+            Files.deleteIfExists(tempFile);
+
+            return ResponseEntity.ok(grades);
+
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }

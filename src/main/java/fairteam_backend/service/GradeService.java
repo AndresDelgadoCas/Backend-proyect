@@ -5,6 +5,8 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import fairteam_backend.adapter.CsvGradeAdapter;
+import fairteam_backend.adapter.GradeAdapter;
 import fairteam_backend.entity.Grade;
 import fairteam_backend.repository.GradeRepository;
 
@@ -74,6 +76,30 @@ public class GradeService {
                         new RuntimeException(
                                 "Grade not found with id: " + id
                         ));
+    }
+
+    public List<Grade> importFromCsv(String filePath) {
+
+        GradeAdapter adapter = new CsvGradeAdapter();
+
+        List<Grade> grades = adapter.importGrades(filePath);
+
+        List<Grade> savedGrades =
+                gradeRepository.saveAll(grades);
+
+        for (Grade grade : savedGrades) {
+
+            if (grade.getStudentId() != null
+                    && grade.getGrade() != null) {
+
+                gradeObserverService.notifyGradeChange(
+                        grade.getStudentId(),
+                        grade.getGrade().doubleValue()
+                );
+            }
+        }
+
+        return savedGrades;
     }
 
     public void delete(Long id) {
