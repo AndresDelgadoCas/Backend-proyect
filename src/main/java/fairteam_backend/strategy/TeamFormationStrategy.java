@@ -1,5 +1,8 @@
 package fairteam_backend.strategy;
 
-public class TeamFormationStrategy {
-    
+import java.util.List;
+
+public interface TeamFormationStrategy {
+
+    double calculateScore(List<TeamCandidate> candidates);
 }
