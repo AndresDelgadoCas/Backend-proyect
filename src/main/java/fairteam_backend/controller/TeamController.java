@@ -11,10 +11,17 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import fairteam_backend.entity.Team;
+import fairteam_backend.service.TeamAnalysisService;
 import fairteam_backend.service.TeamService;
+import fairteam_backend.strategy.BalancedLevelStrategy;
+import fairteam_backend.strategy.PerformanceStrategy;
+import fairteam_backend.strategy.SkillBalancedStrategy;
+import fairteam_backend.strategy.TeamCandidate;
+import fairteam_backend.strategy.TeamFormationStrategy;
 
 @RestController
 @RequestMapping("/api/teams")
@@ -22,9 +29,23 @@ import fairteam_backend.service.TeamService;
 public class TeamController {
 
     private final TeamService service;
+    private final TeamAnalysisService teamAnalysisService;
+    private final BalancedLevelStrategy balancedLevelStrategy;
+    private final PerformanceStrategy performanceStrategy;
+    private final SkillBalancedStrategy skillBalancedStrategy;
 
-    public TeamController(TeamService service) {
+    public TeamController(
+            TeamService service,
+            TeamAnalysisService teamAnalysisService,
+            BalancedLevelStrategy balancedLevelStrategy,
+            PerformanceStrategy performanceStrategy,
+            SkillBalancedStrategy skillBalancedStrategy) {
+
         this.service = service;
+        this.teamAnalysisService = teamAnalysisService;
+        this.balancedLevelStrategy = balancedLevelStrategy;
+        this.performanceStrategy = performanceStrategy;
+        this.skillBalancedStrategy = skillBalancedStrategy;
     }
 
     @GetMapping
@@ -55,5 +76,36 @@ public class TeamController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/analyze")
+    public ResponseEntity<TeamAnalysisService.TeamAnalysisResult> analyzeTeam(
+            @RequestBody List<TeamCandidate> candidates,
+            @RequestParam(defaultValue = "balanced") String strategy) {
+
+        TeamFormationStrategy selectedStrategy;
+
+        switch (strategy.toLowerCase()) {
+            case "performance":
+                selectedStrategy = performanceStrategy;
+                break;
+
+            case "skill":
+                selectedStrategy = skillBalancedStrategy;
+                break;
+
+            case "balanced":
+            default:
+                selectedStrategy = balancedLevelStrategy;
+                break;
+        }
+
+        TeamAnalysisService.TeamAnalysisResult result =
+                teamAnalysisService.analyzeTeam(
+                        candidates,
+                        selectedStrategy
+                );
+
+        return ResponseEntity.ok(result);
     }
 }
