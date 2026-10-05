@@ -6,15 +6,21 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import fairteam_backend.entity.Team;
+import fairteam_backend.factory.Recommendation;
 import fairteam_backend.repository.TeamRepository;
 
 @Service
 public class TeamService {
 
     private final TeamRepository teamRepository;
+    private final RecommendationService recommendationService;
 
-    public TeamService(TeamRepository teamRepository) {
+    public TeamService(
+            TeamRepository teamRepository,
+            RecommendationService recommendationService) {
+
         this.teamRepository = teamRepository;
+        this.recommendationService = recommendationService;
     }
 
     public List<Team> findAll() {
@@ -40,14 +46,20 @@ public class TeamService {
                     return teamRepository.save(existing);
                 })
                 .orElseThrow(() ->
-                        new RuntimeException("Team not found with id: " + id));
+                        new RuntimeException(
+                                "Team not found with id: " + id));
     }
 
     public void delete(Long id) {
         if (!teamRepository.existsById(id)) {
-            throw new RuntimeException("Team not found with id: " + id);
+            throw new RuntimeException(
+                    "Team not found with id: " + id);
         }
 
         teamRepository.deleteById(id);
+    }
+
+    public Recommendation createTeamRecommendation(String message) {
+        return recommendationService.createTeamRecommendation(message);
     }
 }

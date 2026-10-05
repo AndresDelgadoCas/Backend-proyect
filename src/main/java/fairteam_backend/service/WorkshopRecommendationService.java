@@ -6,16 +6,21 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import fairteam_backend.entity.WorkshopRecommendation;
+import fairteam_backend.factory.Recommendation;
 import fairteam_backend.repository.WorkshopRecommendationRepository;
 
 @Service
 public class WorkshopRecommendationService {
 
     private final WorkshopRecommendationRepository repository;
+    private final RecommendationService recommendationService;
 
     public WorkshopRecommendationService(
-            WorkshopRecommendationRepository repository) {
+            WorkshopRecommendationRepository repository,
+            RecommendationService recommendationService) {
+
         this.repository = repository;
+        this.recommendationService = recommendationService;
     }
 
     public List<WorkshopRecommendation> findAll() {
@@ -28,6 +33,7 @@ public class WorkshopRecommendationService {
 
     public WorkshopRecommendation save(
             WorkshopRecommendation recommendation) {
+
         return repository.save(recommendation);
     }
 
@@ -37,25 +43,48 @@ public class WorkshopRecommendationService {
 
         return repository.findById(id)
                 .map(existing -> {
-                    existing.setStudent(recommendation.getStudent());
-                    existing.setWorkshop(recommendation.getWorkshop());
-                    existing.setReason(recommendation.getReason());
+
+                    existing.setStudent(
+                            recommendation.getStudent()
+                    );
+
+                    existing.setWorkshop(
+                            recommendation.getWorkshop()
+                    );
+
+                    existing.setReason(
+                            recommendation.getReason()
+                    );
+
                     existing.setRecommendationScore(
                             recommendation.getRecommendationScore()
                     );
+
                     return repository.save(existing);
                 })
                 .orElseThrow(() ->
                         new RuntimeException(
-                                "Workshop recommendation not found with id: " + id));
+                                "Workshop recommendation not found with id: "
+                                        + id
+                        ));
     }
 
     public void delete(Long id) {
+
         if (!repository.existsById(id)) {
             throw new RuntimeException(
-                    "Workshop recommendation not found with id: " + id);
+                    "Workshop recommendation not found with id: "
+                            + id
+            );
         }
 
         repository.deleteById(id);
+    }
+
+    public Recommendation createWorkshopRecommendation(
+            String message) {
+
+        return recommendationService
+                .createWorkshopRecommendation(message);
     }
 }

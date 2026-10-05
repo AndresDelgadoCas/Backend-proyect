@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import fairteam_backend.entity.Team;
+import fairteam_backend.factory.Recommendation;
 import fairteam_backend.service.TeamAnalysisService;
 import fairteam_backend.service.TeamService;
 import fairteam_backend.strategy.BalancedLevelStrategy;
@@ -69,6 +70,7 @@ public class TeamController {
     public ResponseEntity<Team> update(
             @PathVariable Long id,
             @RequestBody Team team) {
+
         return ResponseEntity.ok(service.update(id, team));
     }
 
@@ -86,6 +88,7 @@ public class TeamController {
         TeamFormationStrategy selectedStrategy;
 
         switch (strategy.toLowerCase()) {
+
             case "performance":
                 selectedStrategy = performanceStrategy;
                 break;
@@ -107,5 +110,14 @@ public class TeamController {
                 );
 
         return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/recommendation")
+    public ResponseEntity<Recommendation> createTeamRecommendation(
+            @RequestParam String message) {
+
+        return ResponseEntity.ok(
+                service.createTeamRecommendation(message)
+        );
     }
 }
