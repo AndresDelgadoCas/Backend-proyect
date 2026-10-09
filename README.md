@@ -1,4 +1,4 @@
-# FairTeam Backend
+#  FairTeam Backend
 
 API REST de FairTeam, desarrollada con Java 21 y Spring Boot. Administra estudiantes, calificaciones, habilidades, proyectos, equipos y talleres; también valida sesiones docentes de Firebase y conecta de forma privada con el servicio de generación de talleres con IA.
 
