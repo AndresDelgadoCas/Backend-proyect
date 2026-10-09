@@ -6,7 +6,7 @@ API REST de FairTeam, desarrollada con Java 21 y Spring Boot. Administra estudia
 
 - Java 21 y Spring Boot
 - Spring Data JPA
-- PostgreSQL
+- PostgreSQL 
 - Spring Security OAuth2 Resource Server para validar Firebase ID tokens
 - Maven y Docker
 
