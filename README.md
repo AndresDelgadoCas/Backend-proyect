@@ -50,6 +50,7 @@ Por defecto, la API escucha en `http://localhost:8080`. Para compilar el proyect
 | `AUTH_REQUIRED` | Exigir autenticación para `/api/**` | `false` |
 | `FIREBASE_PROJECT_ID` | ID del proyecto Firebase usado para Google Sign-In | Vacío |
 | `FAIRTEAM_ALLOWED_TEACHER_EMAILS` | Correos docentes autorizados, separados por comas | Vacío |
+| `AUTH_ALLOW_ANY_GOOGLE_USER` | Permitir a cualquier cuenta Google con email verificado usar la API | `false` |
 | `AI_SERVICE_URL` | URL base del servicio de IA | `http://localhost:8000` |
 | `AI_SERVICE_TOKEN` | Token compartido entre backend y servicio de IA | Vacío |
 
@@ -63,9 +64,10 @@ En el Web Service del backend en Render configura:
 AUTH_REQUIRED=true
 FIREBASE_PROJECT_ID=<projectId de Firebase>
 FAIRTEAM_ALLOWED_TEACHER_EMAILS=<correo-docente@institucion.edu>
+AUTH_ALLOW_ANY_GOOGLE_USER=false
 ```
 
-`FIREBASE_PROJECT_ID` debe coincidir con el proyecto usado por el frontend. La lista puede contener varios correos separados por comas. Solo se autoriza a usuarios con correo verificado que aparezca en la lista. Con `AUTH_REQUIRED=false`, las rutas de la API quedan públicas; actívalo para proteger los datos antes de usar la aplicación en producción. Consulta [FIREBASE_AUTH.md](FIREBASE_AUTH.md) para los pasos completos.
+`FIREBASE_PROJECT_ID` debe coincidir con el proyecto usado por el frontend. Por defecto, solo se autoriza a usuarios verificados que aparezcan en la lista. Si quieres que cualquier persona con una cuenta Google verificada pueda acceder a todas las funciones y datos, configura `AUTH_ALLOW_ANY_GOOGLE_USER=true`; el backend no separa los permisos de lectura y modificación por usuario. Con `AUTH_REQUIRED=false`, las rutas de la API quedan públicas. Consulta [FIREBASE_AUTH.md](FIREBASE_AUTH.md) para los pasos completos.
 
 ## Endpoints principales
 

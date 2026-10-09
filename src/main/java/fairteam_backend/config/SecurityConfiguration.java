@@ -38,6 +38,7 @@ public class SecurityConfiguration {
             @Value("${fairteam.security.auth-required:false}") boolean authRequired,
             @Value("${fairteam.security.firebase-project-id:}") String projectId,
             @Value("${fairteam.security.allowed-teachers:}") String allowedTeachers,
+            @Value("${fairteam.security.allow-any-google-user:false}") boolean allowAnyGoogleUser,
             CorsConfigurationSource corsConfigurationSource) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
@@ -58,9 +59,9 @@ public class SecurityConfiguration {
         http.authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/", "/error").permitAll()
-                        .requestMatchers("/api/**").hasRole("TEACHER")
+                        .requestMatchers("/api/**").hasAnyRole("TEACHER", "USER")
                         .anyRequest().permitAll())
-                .oauth2ResourceServer(oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(teacherConverter(teacherEmails))));
+                .oauth2ResourceServer(oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(teacherConverter(teacherEmails, allowAnyGoogleUser))));
         return http.build();
     }
 
@@ -97,17 +98,18 @@ public class SecurityConfiguration {
         return source;
     }
 
-    private Converter<Jwt, ? extends AbstractAuthenticationToken> teacherConverter(Set<String> teacherEmails) {
+    private Converter<Jwt, ? extends AbstractAuthenticationToken> teacherConverter(Set<String> teacherEmails, boolean allowAnyGoogleUser) {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(jwt -> authoritiesFor(jwt, teacherEmails));
+        converter.setJwtGrantedAuthoritiesConverter(jwt -> authoritiesFor(jwt, teacherEmails, allowAnyGoogleUser));
         return converter;
     }
 
-    private Collection<GrantedAuthority> authoritiesFor(Jwt jwt, Set<String> teacherEmails) {
+    private Collection<GrantedAuthority> authoritiesFor(Jwt jwt, Set<String> teacherEmails, boolean allowAnyGoogleUser) {
         String email = jwt.getClaimAsString("email");
         Boolean verified = jwt.getClaim("email_verified");
-        if (email != null && Boolean.TRUE.equals(verified) && teacherEmails.contains(email.toLowerCase(Locale.ROOT))) {
-            return List.of(new SimpleGrantedAuthority("ROLE_TEACHER"));
+        if (email != null && Boolean.TRUE.equals(verified)) {
+            if (allowAnyGoogleUser) return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+            if (teacherEmails.contains(email.toLowerCase(Locale.ROOT))) return List.of(new SimpleGrantedAuthority("ROLE_TEACHER"));
         }
         return List.of();
     }
