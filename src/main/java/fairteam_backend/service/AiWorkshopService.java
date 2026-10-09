@@ -33,12 +33,15 @@ public class AiWorkshopService {
 
     private final RestClient aiRestClient;
     private final String generateWorkshopPath;
+    private final String aiServiceToken;
 
     public AiWorkshopService(
             RestClient aiRestClient,
-            @Value("${fairteam.ai.generate-workshop-path}") String generateWorkshopPath) {
+            @Value("${fairteam.ai.generate-workshop-path}") String generateWorkshopPath,
+            @Value("${fairteam.ai.service-token}") String aiServiceToken) {
         this.aiRestClient = aiRestClient;
         this.generateWorkshopPath = generateWorkshopPath;
+        this.aiServiceToken = aiServiceToken;
     }
 
     public WorkshopGenerationResponseDTO generateWorkshop(
@@ -48,6 +51,11 @@ public class AiWorkshopService {
             String learningObjective) {
 
         validate(file, subject, targetLevel, learningObjective);
+        if (aiServiceToken == null || aiServiceToken.isBlank()) {
+            throw new ResponseStatusException(
+                    SERVICE_UNAVAILABLE,
+                    "La integración interna con IA aún no está configurada.");
+        }
 
         try {
             String filename = safeFilename(file.getOriginalFilename());
@@ -77,6 +85,7 @@ public class AiWorkshopService {
 
             WorkshopGenerationResponseDTO response = aiRestClient.post()
                     .uri(generateWorkshopPath)
+                    .header("X-AI-Service-Token", aiServiceToken)
                     .contentType(MediaType.MULTIPART_FORM_DATA)
                     .body(form)
                     .retrieve()

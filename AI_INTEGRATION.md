@@ -17,8 +17,10 @@ Fields:
 ## AI service endpoint
 
 The backend calls `POST {AI_SERVICE_URL}/api/v1/workshops/generate` using the
-same multipart fields. Configure `AI_SERVICE_URL` in the backend environment;
-it defaults to `http://localhost:8000` for local development.
+same multipart fields and an `X-AI-Service-Token` header. Configure `AI_SERVICE_URL`
+and `AI_SERVICE_TOKEN` in the backend environment; the URL defaults to
+`http://localhost:8000` for local development. Set the same random token in the
+AI service environment. Gemini's key remains only in the AI service.
 
 Expected JSON response:
 
