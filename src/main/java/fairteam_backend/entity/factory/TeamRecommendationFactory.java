@@ -1,4 +1,4 @@
-package fairteam_backend.factory;
+package fairteam_backend.entity.factory;
 
 import org.springframework.stereotype.Component;
 
