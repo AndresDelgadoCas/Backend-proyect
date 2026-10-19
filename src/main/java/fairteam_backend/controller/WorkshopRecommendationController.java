@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import fairteam_backend.entity.WorkshopRecommendation;
-import fairteam_backend.factory.Recommendation;
+import fairteam_backend.entity.factory.Recommendation;
 import fairteam_backend.service.WorkshopRecommendationService;
 
 @RestController

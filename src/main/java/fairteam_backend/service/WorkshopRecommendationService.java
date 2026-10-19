@@ -6,7 +6,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import fairteam_backend.entity.WorkshopRecommendation;
-import fairteam_backend.factory.Recommendation;
+import fairteam_backend.entity.factory.Recommendation;
 import fairteam_backend.repository.WorkshopRecommendationRepository;
 
 @Service

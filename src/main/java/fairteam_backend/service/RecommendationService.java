@@ -2,10 +2,10 @@ package fairteam_backend.service;
 
 import org.springframework.stereotype.Service;
 
-import fairteam_backend.factory.Recommendation;
-import fairteam_backend.factory.RecommendationFactory;
-import fairteam_backend.factory.TeamRecommendationFactory;
-import fairteam_backend.factory.WorkshopRecommendationFactory;
+import fairteam_backend.entity.factory.Recommendation;
+import fairteam_backend.entity.factory.RecommendationFactory;
+import fairteam_backend.entity.factory.TeamRecommendationFactory;
+import fairteam_backend.entity.factory.WorkshopRecommendationFactory;
 
 @Service
 public class RecommendationService {
