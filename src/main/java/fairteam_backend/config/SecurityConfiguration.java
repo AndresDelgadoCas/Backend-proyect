@@ -1,14 +1,12 @@
 package fairteam_backend.config;
 
-import java.util.Arrays;
-import java.util.Collection;
+import java.nio.charset.StandardCharsets;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-import java.util.stream.Collectors;
 
+import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
@@ -17,72 +15,82 @@ import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 public class SecurityConfiguration {
-    private static final String FIREBASE_JWK_SET_URI = "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com";
 
     @Bean
-    SecurityFilterChain applicationSecurity(HttpSecurity http,
-            @Value("${fairteam.security.auth-required:false}") boolean authRequired,
-            @Value("${fairteam.security.firebase-project-id:}") String projectId,
-            @Value("${fairteam.security.allowed-teachers:}") String allowedTeachers,
-            @Value("${fairteam.security.allow-any-google-user:false}") boolean allowAnyGoogleUser,
-            CorsConfigurationSource corsConfigurationSource) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configurationSource(corsConfigurationSource))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-
-        if (!authRequired) {
-            http.authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll());
-            return http.build();
+    SecretKey jwtSecretKey(@Value("${fairteam.security.jwt-secret:}") String secret) {
+        if (secret == null || secret.getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalStateException("JWT_SECRET must contain at least 32 characters.");
         }
-        if (projectId == null || projectId.isBlank()) {
-            throw new IllegalStateException("FIREBASE_PROJECT_ID is required when AUTH_REQUIRED=true");
-        }
-
-        Set<String> teacherEmails = Arrays.stream(allowedTeachers.split(","))
-                .map(String::trim).filter(value -> !value.isBlank())
-                .map(value -> value.toLowerCase(Locale.ROOT)).collect(Collectors.toUnmodifiableSet());
-
-        http.authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/", "/error").permitAll()
-                        .requestMatchers("/api/**").hasAnyRole("TEACHER", "USER")
-                        .anyRequest().permitAll())
-                .oauth2ResourceServer(oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(teacherConverter(teacherEmails, allowAnyGoogleUser))));
-        return http.build();
+        return new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
     }
 
     @Bean
-    @ConditionalOnProperty(name = "fairteam.security.auth-required", havingValue = "true")
-    JwtDecoder firebaseJwtDecoder(@Value("${fairteam.security.firebase-project-id:}") String projectId) {
-        if (projectId == null || projectId.isBlank()) {
-            throw new IllegalStateException("FIREBASE_PROJECT_ID is required when AUTH_REQUIRED=true");
-        }
-        NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(FIREBASE_JWK_SET_URI).build();
-        decoder.setJwtValidator(token -> {
-            var standard = JwtValidators.createDefaultWithIssuer("https://securetoken.google.com/" + projectId).validate(token);
-            if (standard.hasErrors()) return standard;
-            Object audienceClaim = token.getClaims().get("aud");
-            boolean matches = audienceClaim instanceof String audience && projectId.equals(audience)
-                    || audienceClaim instanceof Collection<?> audiences && audiences.contains(projectId);
-            return matches ? org.springframework.security.oauth2.core.OAuth2TokenValidatorResult.success()
-                    : org.springframework.security.oauth2.core.OAuth2TokenValidatorResult.failure(
-                            new org.springframework.security.oauth2.core.OAuth2Error("invalid_token", "Token audience does not match the Firebase project", null));
-        });
+    JwtEncoder jwtEncoder(SecretKey key) {
+        return new NimbusJwtEncoder(new ImmutableSecret<>(key));
+    }
+
+    @Bean
+    JwtDecoder jwtDecoder(SecretKey key) {
+        NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(key)
+                .macAlgorithm(org.springframework.security.oauth2.jose.jws.MacAlgorithm.HS256)
+                .build();
+        decoder.setJwtValidator(JwtValidators.createDefaultWithIssuer("fairteam"));
         return decoder;
+    }
+
+    @Bean
+    TenantIsolationFilter tenantIsolationFilter(JdbcTemplate jdbcTemplate,
+            PlatformTransactionManager transactionManager) {
+        return new TenantIsolationFilter(jdbcTemplate, transactionManager);
+    }
+
+    @Bean
+    FilterRegistrationBean<TenantIsolationFilter> disableContainerTenantFilterRegistration(
+            TenantIsolationFilter filter) {
+        FilterRegistrationBean<TenantIsolationFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    @Bean
+    SecurityFilterChain applicationSecurity(HttpSecurity http,
+            CorsConfigurationSource corsConfigurationSource,
+            TenantIsolationFilter tenantIsolationFilter) throws Exception {
+        JwtGrantedAuthoritiesConverter authorities = new JwtGrantedAuthoritiesConverter();
+        authorities.setAuthoritiesClaimName("roles");
+        authorities.setAuthorityPrefix("ROLE_");
+        JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
+        jwtConverter.setJwtGrantedAuthoritiesConverter(authorities);
+
+        http.csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/", "/error", "/api/auth/register", "/api/auth/login", "/health").permitAll()
+                        .anyRequest().authenticated())
+                .oauth2ResourceServer(oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtConverter)))
+                .addFilterAfter(tenantIsolationFilter, BearerTokenAuthenticationFilter.class);
+        return http.build();
     }
 
     @Bean
@@ -90,27 +98,11 @@ public class SecurityConfiguration {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "X-AI-Service-Token"));
         configuration.setExposedHeaders(List.of("Location"));
         configuration.setAllowCredentials(false);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
-    }
-
-    private Converter<Jwt, ? extends AbstractAuthenticationToken> teacherConverter(Set<String> teacherEmails, boolean allowAnyGoogleUser) {
-        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(jwt -> authoritiesFor(jwt, teacherEmails, allowAnyGoogleUser));
-        return converter;
-    }
-
-    private Collection<GrantedAuthority> authoritiesFor(Jwt jwt, Set<String> teacherEmails, boolean allowAnyGoogleUser) {
-        String email = jwt.getClaimAsString("email");
-        Boolean verified = jwt.getClaim("email_verified");
-        if (email != null && Boolean.TRUE.equals(verified)) {
-            if (allowAnyGoogleUser) return List.of(new SimpleGrantedAuthority("ROLE_USER"));
-            if (teacherEmails.contains(email.toLowerCase(Locale.ROOT))) return List.of(new SimpleGrantedAuthority("ROLE_TEACHER"));
-        }
-        return List.of();
     }
 }

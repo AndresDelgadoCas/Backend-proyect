@@ -1,132 +1,76 @@
-#  FairTeam Backend
+# FairTeam Backend
 
-API REST de FairTeam, desarrollada con Java 21 y Spring Boot. Administra estudiantes, calificaciones, habilidades, proyectos, equipos y talleres; también valida sesiones docentes de Firebase y conecta de forma privada con el servicio de generación de talleres con IA.
- 
+API REST para acompañamiento académico docente. Gestiona estudiantes y calificaciones, y conecta de forma privada con un servicio separado que genera talleres a partir del material de clase.
+
 ## Tecnologías
 
-- Java 21 y Spring Boot
-- Spring Data JPA
-- PostgreSQL 
-- Spring Security OAuth2 Resource Server para validar Firebase ID tokens
-- Maven y Docker
+- Java 21, Spring Boot, Spring Data JPA y PostgreSQL.
+- Spring Security con cuentas propias, contraseñas BCrypt y JWT firmado.
+- Flyway para cambios aditivos y aislamiento de datos por docente.
+- Servicio de IA Python/Gemini separado; la clave Gemini solo vive en ese servicio.
 
-## Requisitos
+## Configuración local
 
-- JDK 21
-- PostgreSQL con el esquema de FairTeam disponible
-- Para generar talleres con IA: el servicio de IA desplegado y accesible desde el backend
+Necesitas Java 21 y una base PostgreSQL con el esquema inicial de FairTeam. Flyway toma como baseline el esquema existente (versión 0), luego crea las tablas de evaluación y aplica aislamiento por cuenta con Row Level Security. El primer docente registrado recibe los datos académicos preexistentes; cada registro posterior inicia con un espacio vacío y separado. Hibernate valida el esquema (`ddl-auto=validate`).
 
-## Ejecutar localmente
+Configura estas variables antes de iniciar la API:
 
-1. Clona este repositorio y abre una terminal en la carpeta del proyecto.
-2. Configura las variables de conexión a PostgreSQL (ver la tabla de variables).
-3. Confirma que la base de datos contiene el esquema que espera JPA. El backend usa `spring.jpa.hibernate.ddl-auto=validate`, así que valida las tablas existentes y no las crea automáticamente.
-4. Inicia la API:
+| Variable | Uso |
+|---|---|
+| `SPRING_DATASOURCE_URL` | URL JDBC de PostgreSQL |
+| `SPRING_DATASOURCE_USERNAME` / `SPRING_DATASOURCE_PASSWORD` | Credenciales de PostgreSQL |
+| `JWT_SECRET` | Secreto aleatorio de al menos 32 caracteres para firmar sesiones |
+| `AI_SERVICE_URL` | URL del servicio de IA, por defecto `http://localhost:8000` |
+| `AI_SERVICE_TOKEN` | Secreto compartido entre backend y servicio de IA |
+
+En PowerShell puedes crear valores locales con:
+
+```powershell
+$env:JWT_SECRET = [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(48))
+```
+
+No uses esos ejemplos en producción ni guardes secretos en Git. En Render configura `JWT_SECRET` y las variables de conexión/IA desde el panel **Environment**. El registro público no necesita invitación.
+
+Inicia y compila localmente:
 
 ```powershell
 .\mvnw.cmd spring-boot:run
-```
-
-En Linux o macOS:
-
-```bash
-./mvnw spring-boot:run
-```
-
-Por defecto, la API escucha en `http://localhost:8080`. Para compilar el proyecto:
-
-```powershell
 .\mvnw.cmd -DskipTests package
 ```
 
-## Variables de entorno
+## Autenticación
 
-| Variable | Uso | Valor predeterminado |
-|---|---|---|
-| `PORT` | Puerto HTTP asignado por Render | `8080` |
-| `SPRING_DATASOURCE_URL` | URL JDBC de PostgreSQL | `jdbc:postgresql://localhost:5432/fairteam_db` |
-| `SPRING_DATASOURCE_USERNAME` | Usuario de PostgreSQL | `postgres` |
-| `SPRING_DATASOURCE_PASSWORD` | Contraseña de PostgreSQL | Vacío |
-| `AUTH_REQUIRED` | Exigir autenticación para `/api/**` | `false` |
-| `FIREBASE_PROJECT_ID` | ID del proyecto Firebase usado para Google Sign-In | Vacío |
-| `FAIRTEAM_ALLOWED_TEACHER_EMAILS` | Correos docentes autorizados, separados por comas | Vacío |
-| `AUTH_ALLOW_ANY_GOOGLE_USER` | Permitir a cualquier cuenta Google con email verificado usar la API | `false` |
-| `AI_SERVICE_URL` | URL base del servicio de IA | `http://localhost:8000` |
-| `AI_SERVICE_TOKEN` | Token compartido entre backend y servicio de IA | Vacío |
+- `POST /api/auth/register`: crea una cuenta docente; requiere `name`, `email` y `password` (mínimo 10 caracteres).
+- `POST /api/auth/login`: recibe `email` y `password`.
+- `GET /api/auth/me`: confirma la sesión del token.
+- Las demás rutas requieren `Authorization: Bearer <accessToken>`; el token vence a las 8 horas.
 
-También se aceptan `DB_URL`, `DB_USERNAME` y `DB_PASSWORD` como alternativas para la conexión a PostgreSQL.
+Ejemplo de inicio:
 
-### Activar autenticación Firebase
-
-En el Web Service del backend en Render configura:
-
-```text
-AUTH_REQUIRED=true
-FIREBASE_PROJECT_ID=<projectId de Firebase>
-FAIRTEAM_ALLOWED_TEACHER_EMAILS=<correo-docente@institucion.edu>
-AUTH_ALLOW_ANY_GOOGLE_USER=false
+```json
+{"email":"docente@institucion.edu","password":"tu-contraseña"}
 ```
 
-`FIREBASE_PROJECT_ID` debe coincidir con el proyecto usado por el frontend. Por defecto, solo se autoriza a usuarios verificados que aparezcan en la lista. Si quieres que cualquier persona con una cuenta Google verificada pueda acceder a todas las funciones y datos, configura `AUTH_ALLOW_ANY_GOOGLE_USER=true`; el backend no separa los permisos de lectura y modificación por usuario. Con `AUTH_REQUIRED=false`, las rutas de la API quedan públicas. Consulta [FIREBASE_AUTH.md](FIREBASE_AUTH.md) para los pasos completos.
+El registro está abierto. La migración V2 asigna los datos académicos actuales al primer docente que cree cuenta; cada cuenta posterior recibe datos propios aplicados con Row Level Security de PostgreSQL.
 
-## Endpoints principales
+## Rutas principales
 
-La URL base de producción es `https://backend-proyect-junz.onrender.com`.
+| Recurso | Rutas |
+|---|---|
+| Estudiantes | `/api/students` |
+| Notas e importación CSV | `/api/grades`, `/api/grades/import` |
+| Asignaturas | `/api/subjects` |
+| Actividades y entregas | `/api/assignments`, `/api/assignment-submissions` |
+| Rúbricas | `/api/grading-rubrics`, `/api/rubric-criteria` |
+| Revisión asistida | `/api/ai-evaluations` |
+| Taller desde material | `POST /api/ai/workshops/generate` |
 
-| Recurso | Rutas principales | Operaciones |
-|---|---|---|
-| Estado | `/` | Estado de la API |
-| Sesión | `/api/auth/me` | Verificar el docente autenticado |
-| Estudiantes | `/api/students` | CRUD |
-| Calificaciones | `/api/grades` | CRUD e importación CSV con `POST /api/grades/import` |
-| Asignaturas | `/api/subjects` | CRUD |
-| Habilidades | `/api/skills` | CRUD |
-| Proyectos | `/api/projects` | CRUD |
-| Equipos | `/api/teams` | CRUD, análisis con `POST /api/teams/analyze` y recomendación |
-| Talleres | `/api/workshops` | CRUD |
-| Recomendaciones de talleres | `/api/workshop-recommendations` | CRUD y creación por Factory Method |
-| Talleres generados con IA | `/api/ai/workshops/generate` | Generar desde material de estudio |
-
-También hay recursos para habilidades y preferencias de estudiantes/proyectos, disponibilidad y miembros de equipos; sus rutas usan `/api/student-skills`, `/api/student-project-preferences`, `/api/project-skill-requirements`, `/api/student-availability` y `/api/team-students`.
-
-Los endpoints CRUD usan JSON salvo las rutas de importación/generación de archivos, que usan `multipart/form-data`. Revisa los controladores en `src/main/java/fairteam_backend/controller` para los campos y formatos de cada recurso.
-
-### Importar calificaciones
-
-Envía un archivo CSV en el campo `file` a `POST /api/grades/import`. El encabezado requerido es:
-
-```csv
-id,studentId,subjectId,grade,period
-```
-
-Los identificadores de estudiante y asignatura deben existir previamente en la base de datos.
-
-### Generar un taller con IA
-
-`POST /api/ai/workshops/generate` recibe `multipart/form-data` con estos campos:
-
-- `file`: material PDF, DOCX o TXT (máximo 10 MB).
-- `subject`: asignatura.
-- `targetLevel`: `LOW`, `MEDIUM` o `HIGH` (se aceptan equivalentes en español).
-- `learningObjective`: objetivo opcional.
-
-El backend envía el archivo al servicio de IA con `AI_SERVICE_TOKEN`. La clave de Gemini debe estar únicamente en ese servicio; no la pongas en este repositorio ni en el frontend. Más detalles en [AI_INTEGRATION.md](AI_INTEGRATION.md).
+Para crear un taller se envía `multipart/form-data` con `file` (PDF, DOCX o TXT), `subject`, `targetLevel` y opcionalmente `learningObjective`. La llamada a Gemini tiene un límite de tiempo para devolver un error controlado si el proveedor demora; el tablero académico no espera a esta generación.
 
 ## Patrones de diseño
 
-El proyecto contiene ejemplos de los patrones requeridos para la materia:
-
-- **Strategy:** estrategias para analizar equilibrio, rendimiento o habilidades de los equipos.
-- **Adapter:** lectura de calificaciones desde CSV.
-- **Factory Method:** creación de recomendaciones.
-- **Observer:** notificación de eventos del dominio.
-- **Decorator:** composición de criterios de análisis.
+El backend conserva ejemplos de Strategy, Adapter, Factory Method, Observer y Decorator para los requisitos del curso.
 
 ## Despliegue
 
-El backend está preparado para Render como Web Service y también incluye un `Dockerfile`. Render debe desplegar la rama `main`, usar Java 21 y proporcionar las variables de base de datos y de los servicios externos desde **Environment**. Nunca guardes contraseñas, tokens de servicio ni claves Gemini en el repositorio.
-
-## Documentación relacionada
-
-- [Autenticación Firebase](FIREBASE_AUTH.md)
-- [Contrato de integración con el servicio de IA](AI_INTEGRATION.md)
+Render debe usar Java 21 y configurar secretos y datos de conexión desde variables de entorno. Las migraciones presuponen que las tablas base `students` y `subjects` ya existen. La V2 aplica políticas RLS a las tablas académicas y adopta sus registros existentes para la primera cuenta; revisa la base destino y respalda los datos antes del despliegue.
