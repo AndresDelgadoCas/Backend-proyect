@@ -37,7 +37,8 @@ public class TeacherAuthService {
 
     @Transactional
     public AuthResult register(String name, String email, String password) {
-        jdbcTemplate.queryForObject("SELECT id FROM tenant_bootstrap_lock WHERE id = 1 FOR UPDATE", Integer.class);
+        // Serialize registration without relying on a migration-created table.
+        jdbcTemplate.execute("SELECT pg_advisory_xact_lock(14839201, 1)");
         String normalizedEmail = normalizeEmail(email);
         if (users.findByEmail(normalizedEmail).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe una cuenta con ese correo.");
