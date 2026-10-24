@@ -16,7 +16,7 @@ public class TenantSchemaStartupValidator implements ApplicationRunner {
 
     private static final Logger logger = LoggerFactory.getLogger(TenantSchemaStartupValidator.class);
     private static final List<String> REQUIRED_TABLES = List.of(
-            "courses", "grades", "project_skill_requirements", "projects", "skills",
+            "courses", "course_materials", "grades", "project_skill_requirements", "projects", "skills",
             "student_availability", "student_project_preferences", "student_skills",
             "students", "subjects", "team_students", "teams",
             "workshop_recommendations", "workshops", "assignments",

@@ -45,7 +45,7 @@ DECLARE
     table_name TEXT;
 BEGIN
     FOREACH table_name IN ARRAY ARRAY[
-        'courses',
+          'courses', 'course_materials',
         'grades', 'project_skill_requirements', 'projects', 'skills',
         'student_availability', 'student_project_preferences', 'student_skills',
         'students', 'subjects', 'team_students', 'teams',
@@ -66,6 +66,7 @@ END;
 $$;
 
 CREATE INDEX IF NOT EXISTS idx_grades_teacher_id ON grades(teacher_id);
+CREATE INDEX IF NOT EXISTS idx_course_materials_teacher_id ON course_materials(teacher_id);
 CREATE INDEX IF NOT EXISTS idx_students_teacher_id ON students(teacher_id);
 CREATE INDEX IF NOT EXISTS idx_subjects_teacher_id ON subjects(teacher_id);
 CREATE INDEX IF NOT EXISTS idx_projects_teacher_id ON projects(teacher_id);
