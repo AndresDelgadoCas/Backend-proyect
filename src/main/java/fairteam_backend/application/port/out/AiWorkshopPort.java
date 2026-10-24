@@ -11,5 +11,6 @@ public interface AiWorkshopPort {
             MultipartFile file,
             String subject,
             String targetLevel,
-            String learningObjective);
+            String learningObjective,
+            String learningContext);
 }

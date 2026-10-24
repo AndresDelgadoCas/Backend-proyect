@@ -68,7 +68,7 @@ El registro está abierto. Las migraciones V2 y V5 aplican el aislamiento por do
 
 La lista de estudiantes acepta CSV `name,email,academicLevel` (`name` obligatorio). Para importar notas dentro de un curso, usa `studentName` o `studentEmail`, `subject`, `grade` y `period`; también están disponibles los campos de ID para integraciones anteriores. Las materias se crean si no existen. La migración V5 organiza los registros existentes por docente en un curso inicial.
 
-Para crear un taller se envía `multipart/form-data` con `file` (PDF, DOCX o TXT), `subject`, `targetLevel` y opcionalmente `learningObjective`. La llamada a Gemini tiene un límite de tiempo para devolver un error controlado si el proveedor demora; el tablero académico no espera a esta generación.
+Para crear un taller se envía `multipart/form-data` con `file` (PDF, DOCX o TXT), `subject`, `targetLevel`, y opcionalmente `learningObjective` y `learningContext` (máximo 2500 caracteres). El contexto solo incluye recuentos, promedio y tema priorizado del curso; no se envían nombres ni notas individuales a Gemini. La llamada tiene límite de tiempo y presenta un mensaje útil si el proveedor rechaza la clave, cuota o modelo.
 
 ## Patrones de diseño
 

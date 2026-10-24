@@ -26,20 +26,23 @@ public class AiWorkshopService {
             MultipartFile file,
             String subject,
             String targetLevel,
-            String learningObjective) {
-        validate(file, subject, targetLevel, learningObjective);
+            String learningObjective,
+            String learningContext) {
+        validate(file, subject, targetLevel, learningObjective, learningContext);
         return aiWorkshopPort.generate(
                 file,
                 subject.trim(),
                 normalizeLevel(targetLevel),
-                learningObjective == null ? "" : learningObjective.trim());
+                learningObjective == null ? "" : learningObjective.trim(),
+                learningContext == null ? "" : learningContext.trim());
     }
 
     private void validate(
             MultipartFile file,
             String subject,
             String targetLevel,
-            String learningObjective) {
+            String learningObjective,
+            String learningContext) {
         if (file == null || file.isEmpty()) {
             throw new ResponseStatusException(BAD_REQUEST, "Debes adjuntar un archivo.");
         }
@@ -66,6 +69,11 @@ public class AiWorkshopService {
             throw new ResponseStatusException(
                     BAD_REQUEST,
                     "El objetivo de aprendizaje no puede superar 1000 caracteres.");
+        }
+        if (learningContext != null && learningContext.length() > 2500) {
+            throw new ResponseStatusException(
+                    BAD_REQUEST,
+                    "El contexto del curso no puede superar 2500 caracteres.");
         }
     }
 

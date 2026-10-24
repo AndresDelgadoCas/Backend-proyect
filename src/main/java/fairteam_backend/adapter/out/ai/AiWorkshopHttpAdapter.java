@@ -49,7 +49,8 @@ public class AiWorkshopHttpAdapter implements AiWorkshopPort {
             MultipartFile file,
             String subject,
             String targetLevel,
-            String learningObjective) {
+            String learningObjective,
+            String learningContext) {
         if (aiServiceToken == null || aiServiceToken.isBlank()) {
             throw new ResponseStatusException(
                     SERVICE_UNAVAILABLE,
@@ -74,6 +75,7 @@ public class AiWorkshopHttpAdapter implements AiWorkshopPort {
             form.add("subject", subject);
             form.add("targetLevel", targetLevel);
             form.add("learningObjective", learningObjective);
+            form.add("learningContext", learningContext);
 
             WorkshopGenerationResponseDTO response = aiRestClient.post()
                     .uri(generateWorkshopPath)
@@ -97,7 +99,15 @@ public class AiWorkshopHttpAdapter implements AiWorkshopPort {
                     SERVICE_UNAVAILABLE,
                     "El servicio de IA no está disponible en este momento.");
         } catch (RestClientResponseException ex) {
-            throw new ResponseStatusException(BAD_GATEWAY, "El servicio de IA no pudo procesar el material.");
+            String message = switch (ex.getStatusCode().value()) {
+                case 401, 403 -> "No se pudo autenticar la conexión interna con IA. Revisa AI_SERVICE_TOKEN en Render.";
+                case 413 -> "El material supera el límite permitido de 10 MB.";
+                case 422 -> "No pudimos extraer texto del material. Prueba con un PDF seleccionable, DOCX o TXT.";
+                case 429 -> "Gemini alcanzó el límite o la cuota disponible. Revisa la cuota de la API e inténtalo más tarde.";
+                case 503 -> "El servicio de IA no está configurado o disponible. Revisa GEMINI_API_KEY y AI_SERVICE_TOKEN en Render.";
+                default -> "Gemini no pudo generar el taller. Revisa el modelo, la clave y la cuota de la API.";
+            };
+            throw new ResponseStatusException(BAD_GATEWAY, message);
         } catch (RestClientException ex) {
             throw new ResponseStatusException(BAD_GATEWAY, "No se pudo completar la solicitud al servicio de IA.");
         }

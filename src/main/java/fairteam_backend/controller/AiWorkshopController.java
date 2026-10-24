@@ -28,12 +28,14 @@ public class AiWorkshopController {
             @RequestParam("file") MultipartFile file,
             @RequestParam("subject") String subject,
             @RequestParam("targetLevel") String targetLevel,
-            @RequestParam(value = "learningObjective", required = false) String learningObjective) {
+            @RequestParam(value = "learningObjective", required = false) String learningObjective,
+            @RequestParam(value = "learningContext", required = false) String learningContext) {
 
         return ResponseEntity.ok(aiWorkshopService.generateWorkshop(
                 file,
                 subject,
                 targetLevel,
-                learningObjective));
+                learningObjective,
+                learningContext));
     }
 }
