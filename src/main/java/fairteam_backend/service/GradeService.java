@@ -9,23 +9,37 @@ import fairteam_backend.adapter.CsvGradeAdapter;
 import fairteam_backend.adapter.GradeAdapter;
 import fairteam_backend.entity.Grade;
 import fairteam_backend.repository.GradeRepository;
+import fairteam_backend.repository.CourseRepository;
+import fairteam_backend.entity.Course;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class GradeService {
 
     private final GradeRepository gradeRepository;
     private final GradeObserverService gradeObserverService;
+    private final CourseRepository courseRepository;
+    private final CourseGradeImportService courseGradeImportService;
 
     public GradeService(
             GradeRepository gradeRepository,
-            GradeObserverService gradeObserverService) {
+            GradeObserverService gradeObserverService,
+            CourseRepository courseRepository,
+            CourseGradeImportService courseGradeImportService) {
 
         this.gradeRepository = gradeRepository;
         this.gradeObserverService = gradeObserverService;
+        this.courseRepository = courseRepository;
+        this.courseGradeImportService = courseGradeImportService;
     }
 
     public List<Grade> findAll() {
         return gradeRepository.findAll();
+    }
+
+    public List<Grade> findAll(Long courseId) {
+        return courseId == null ? findAll() : gradeRepository.findAllByCourse_Id(courseId);
     }
 
     public Optional<Grade> findById(Long id) {
@@ -33,6 +47,8 @@ public class GradeService {
     }
 
     public Grade save(Grade grade) {
+
+        assignCourse(grade);
 
         Grade savedGrade = gradeRepository.save(grade);
 
@@ -57,6 +73,10 @@ public class GradeService {
                     existingGrade.setPeriod(grade.getPeriod());
                     existingGrade.setStudent(grade.getStudent());
                     existingGrade.setSubject(grade.getSubject());
+                    if (grade.getCourseId() != null) {
+                        assignCourse(grade);
+                        existingGrade.setCourse(grade.getCourse());
+                    }
 
                     Grade updatedGrade =
                             gradeRepository.save(existingGrade);
@@ -78,11 +98,32 @@ public class GradeService {
                         ));
     }
 
+    private void assignCourse(Grade grade) {
+        Long courseId = grade.getCourseId();
+        if (courseId == null) return;
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontró el curso seleccionado."));
+        grade.setCourse(course);
+    }
+
     public List<Grade> importFromCsv(String filePath) {
+        return importFromCsv(filePath, null);
+    }
+
+    public List<Grade> importFromCsv(String filePath, Long courseId) {
+
+        if (courseId != null) return courseGradeImportService.importGrades(java.nio.file.Path.of(filePath), courseId);
 
         GradeAdapter adapter = new CsvGradeAdapter();
 
         List<Grade> grades = adapter.importGrades(filePath);
+
+        if (courseId != null) {
+            for (Grade grade : grades) {
+                grade.setCourseId(courseId);
+                assignCourse(grade);
+            }
+        }
 
         List<Grade> savedGrades =
                 gradeRepository.saveAll(grades);

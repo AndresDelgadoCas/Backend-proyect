@@ -92,7 +92,7 @@ public class TeacherAuthService {
         jdbcTemplate.queryForObject("SELECT set_config('app.teacher_id', ?, true)", String.class, teacherId.toString());
         jdbcTemplate.queryForObject("SELECT set_config('app.bootstrap', 'true', true)", String.class);
         List<String> tenantTables = List.of(
-                "grades", "project_skill_requirements", "projects", "skills",
+                "courses", "grades", "project_skill_requirements", "projects", "skills",
                 "student_availability", "student_project_preferences", "student_skills",
                 "students", "subjects", "team_students", "teams",
                 "workshop_recommendations", "workshops", "assignments",
@@ -100,6 +100,16 @@ public class TeacherAuthService {
         for (String table : tenantTables) {
             jdbcTemplate.update("UPDATE " + table + " SET teacher_id = ? WHERE teacher_id IS NULL", teacherId);
         }
+        Boolean hasCourse = jdbcTemplate.queryForObject(
+                "SELECT EXISTS (SELECT 1 FROM courses WHERE teacher_id = ?)", Boolean.class, teacherId);
+        if (!Boolean.TRUE.equals(hasCourse)) {
+            jdbcTemplate.update("INSERT INTO courses(teacher_id, name, description) VALUES (?, ?, ?)",
+                    teacherId, "Curso importado", "Datos existentes antes de organizar por cursos.");
+        }
+        jdbcTemplate.update("UPDATE students SET course_id = (SELECT id FROM courses WHERE teacher_id = ? ORDER BY id LIMIT 1) "
+                + "WHERE teacher_id = ? AND course_id IS NULL", teacherId, teacherId);
+        jdbcTemplate.update("UPDATE grades SET course_id = (SELECT course_id FROM students WHERE students.id = grades.student_id) "
+                + "WHERE teacher_id = ? AND course_id IS NULL", teacherId);
         jdbcTemplate.queryForObject("SELECT set_config('app.bootstrap', 'false', true)", String.class);
     }
 

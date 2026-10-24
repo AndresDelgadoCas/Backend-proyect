@@ -45,6 +45,7 @@ DECLARE
     table_name TEXT;
 BEGIN
     FOREACH table_name IN ARRAY ARRAY[
+        'courses',
         'grades', 'project_skill_requirements', 'projects', 'skills',
         'student_availability', 'student_project_preferences', 'student_skills',
         'students', 'subjects', 'team_students', 'teams',

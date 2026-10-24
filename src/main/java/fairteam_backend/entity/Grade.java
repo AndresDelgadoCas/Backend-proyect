@@ -11,18 +11,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
-import jakarta.persistence.UniqueConstraint;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
-@Table(
-    name = "grades",
-    uniqueConstraints = {
-        @UniqueConstraint(
-            name = "uq_student_subject_period",
-            columnNames = {"student_id", "subject_id", "period"}
-        )
-    }
-)
+@Table(name = "grades")
 public class Grade {
 
     @Id
@@ -42,6 +34,11 @@ public class Grade {
 
     @Column(nullable = false, length = 20)
     private String period;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "course_id")
+    @JsonIgnore
+    private Course course;
 
     public Grade() {
     }
@@ -100,6 +97,21 @@ public class Grade {
     public void setPeriod(String period) {
         this.period = period;
     }
+
+    @Transient
+    public Long getCourseId() { return course != null ? course.getId() : null; }
+
+    public void setCourseId(Long courseId) {
+        if (courseId == null) { this.course = null; return; }
+        Course value = new Course();
+        value.setId(courseId);
+        this.course = value;
+    }
+
+    @JsonIgnore
+    public Course getCourse() { return course; }
+
+    public void setCourse(Course course) { this.course = course; }
 
     @Transient
     public Long getStudentId() {

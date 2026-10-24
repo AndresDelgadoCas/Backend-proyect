@@ -51,19 +51,22 @@ Ejemplo de inicio:
 {"email":"docente@institucion.edu","password":"tu-contraseña"}
 ```
 
-El registro está abierto. La migración V2 asigna los datos académicos actuales al primer docente que cree cuenta; cada cuenta posterior recibe datos propios aplicados con Row Level Security de PostgreSQL.
+El registro está abierto. Las migraciones V2 y V5 aplican el aislamiento por docente y organizan los datos existentes en un curso inicial; cada docente mantiene sus propios cursos y listas mediante Row Level Security de PostgreSQL.
 
 ## Rutas principales
 
 | Recurso | Rutas |
 |---|---|
-| Estudiantes | `/api/students` |
-| Notas e importación CSV | `/api/grades`, `/api/grades/import` |
+| Cursos | `/api/courses` (CRUD) |
+| Estudiantes | `/api/students`, `/api/students/import?courseId={id}` |
+| Notas e importación CSV | `/api/grades?courseId={id}`, `/api/grades/import?courseId={id}` |
 | Asignaturas | `/api/subjects` |
 | Actividades y entregas | `/api/assignments`, `/api/assignment-submissions` |
 | Rúbricas | `/api/grading-rubrics`, `/api/rubric-criteria` |
 | Revisión asistida | `/api/ai-evaluations` |
 | Taller desde material | `POST /api/ai/workshops/generate` |
+
+La lista de estudiantes acepta CSV `name,email,academicLevel` (`name` obligatorio). Para importar notas dentro de un curso, usa `studentName` o `studentEmail`, `subject`, `grade` y `period`; también están disponibles los campos de ID para integraciones anteriores. Las materias se crean si no existen. La migración V5 organiza los registros existentes por docente en un curso inicial.
 
 Para crear un taller se envía `multipart/form-data` con `file` (PDF, DOCX o TXT), `subject`, `targetLevel` y opcionalmente `learningObjective`. La llamada a Gemini tiene un límite de tiempo para devolver un error controlado si el proveedor demora; el tablero académico no espera a esta generación.
 
@@ -73,4 +76,4 @@ El backend conserva ejemplos de Strategy, Adapter, Factory Method, Observer y De
 
 ## Despliegue
 
-Render debe usar Java 21 y configurar secretos y datos de conexión desde variables de entorno. Las migraciones presuponen que las tablas base `students` y `subjects` ya existen. La V2 aplica políticas RLS a las tablas académicas y adopta sus registros existentes para la primera cuenta; revisa la base destino y respalda los datos antes del despliegue.
+Render debe usar Java 21 y configurar secretos y datos de conexión desde variables de entorno. Las migraciones presuponen que las tablas base `students` y `subjects` ya existen. La V5 conserva los estudiantes y las notas existentes dentro de un curso inicial por docente. Flyway aplica estas migraciones al iniciar; conserva una copia de seguridad de producción antes del despliegue.

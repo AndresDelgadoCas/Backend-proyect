@@ -12,6 +12,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.MediaType;
+import fairteam_backend.service.StudentRosterImportService;
 
 import fairteam_backend.entity.Student;
 import fairteam_backend.service.StudentService;
@@ -22,14 +26,23 @@ import fairteam_backend.service.StudentService;
 public class StudentController {
 
     private final StudentService service;
+    private final StudentRosterImportService rosterImportService;
 
-    public StudentController(StudentService service) {
+    public StudentController(StudentService service, StudentRosterImportService rosterImportService) {
         this.service = service;
+        this.rosterImportService = rosterImportService;
+    }
+
+    @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<List<Student>> importRoster(
+            @RequestParam Long courseId,
+            @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(rosterImportService.importRoster(courseId, file));
     }
 
     @GetMapping
-    public ResponseEntity<List<Student>> findAll() {
-        return ResponseEntity.ok(service.findAll());
+    public ResponseEntity<List<Student>> findAll(@RequestParam(required = false) Long courseId) {
+        return ResponseEntity.ok(service.findAll(courseId));
     }
 
     @GetMapping("/{id}")

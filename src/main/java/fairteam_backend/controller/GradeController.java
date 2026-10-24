@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import fairteam_backend.entity.Grade;
 import fairteam_backend.service.GradeService;
@@ -33,8 +35,8 @@ public class GradeController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Grade>> findAll() {
-        return ResponseEntity.ok(service.findAll());
+    public ResponseEntity<List<Grade>> findAll(@RequestParam(required = false) Long courseId) {
+        return ResponseEntity.ok(service.findAll(courseId));
     }
 
     @GetMapping("/{id}")
@@ -65,14 +67,16 @@ public class GradeController {
 
     @PostMapping("/import")
     public ResponseEntity<List<Grade>> importGrades(
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(required = false) Long courseId) {
 
-        if (file.isEmpty()) {
-            return ResponseEntity.badRequest().build();
+        if (file.isEmpty() || file.getSize() > 10L * 1024 * 1024) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Adjunta un CSV válido de máximo 10 MB.");
         }
 
+        Path tempFile = null;
         try {
-            Path tempFile = Files.createTempFile(
+            tempFile = Files.createTempFile(
                     "fairteam-grades-",
                     ".csv"
             );
@@ -80,14 +84,17 @@ public class GradeController {
             file.transferTo(tempFile.toFile());
 
             List<Grade> grades =
-                    service.importFromCsv(tempFile.toString());
-
-            Files.deleteIfExists(tempFile);
+                    service.importFromCsv(tempFile.toString(), courseId);
 
             return ResponseEntity.ok(grades);
 
         } catch (IOException e) {
             return ResponseEntity.internalServerError().build();
+        } finally {
+            if (tempFile != null) {
+                try { Files.deleteIfExists(tempFile); }
+                catch (IOException ignored) { /* Temporary files are cleaned up by the host. */ }
+            }
         }
     }
 }
