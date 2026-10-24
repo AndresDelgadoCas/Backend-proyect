@@ -3,7 +3,8 @@ package fairteam_backend.adapter.out.ai;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Locale;
-
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.ContentDisposition;
@@ -105,12 +106,27 @@ public class AiWorkshopHttpAdapter implements AiWorkshopPort {
                 case 422 -> "No pudimos extraer texto del material. Prueba con un PDF seleccionable, DOCX o TXT.";
                 case 429 -> "Gemini alcanzó el límite o la cuota disponible. Revisa la cuota de la API e inténtalo más tarde.";
                 case 503 -> "El servicio de IA no está configurado o disponible. Revisa GEMINI_API_KEY y AI_SERVICE_TOKEN en Render.";
+                case 502 -> upstreamGenerationMessage(ex);
                 default -> "Gemini no pudo generar el taller. Revisa el modelo, la clave y la cuota de la API.";
             };
             throw new ResponseStatusException(BAD_GATEWAY, message);
         } catch (RestClientException ex) {
             throw new ResponseStatusException(BAD_GATEWAY, "No se pudo completar la solicitud al servicio de IA.");
         }
+    }
+
+    private String upstreamGenerationMessage(RestClientResponseException ex) {
+        try {
+            Matcher matcher = Pattern.compile("\"detail\"\\s*:\\s*\"((?:\\\\.|[^\"\\\\])*)\"")
+                    .matcher(ex.getResponseBodyAsString());
+            if (matcher.find()) {
+                String message = matcher.group(1).replace("\\\"", "\"").replace("\\n", " ").trim();
+                if (!message.isEmpty() && message.length() <= 300) return message;
+            }
+        } catch (Exception ignored) {
+            // Keep the user-facing response safe if the upstream body is not valid JSON.
+        }
+        return "Gemini no pudo generar el taller. Revisa el modelo, la clave y la cuota de la API.";
     }
 
     private String safeFilename(String originalFilename) {

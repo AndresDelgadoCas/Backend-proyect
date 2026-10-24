@@ -17,7 +17,7 @@ public class AiServiceConfiguration {
 
         var requestFactory = new SimpleClientHttpRequestFactory();
         requestFactory.setConnectTimeout(Duration.ofSeconds(5));
-        requestFactory.setReadTimeout(Duration.ofSeconds(35));
+        requestFactory.setReadTimeout(Duration.ofSeconds(85));
 
         return RestClient.builder()
                 .baseUrl(baseUrl)
