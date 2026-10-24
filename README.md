@@ -72,7 +72,11 @@ Para crear un taller se envía `multipart/form-data` con `file` (PDF, DOCX o TXT
 
 ## Patrones de diseño
 
-El backend conserva ejemplos de Strategy, Adapter, Factory Method, Observer y Decorator para los requisitos del curso.
+El backend conserva ejemplos concretos de Strategy (`strategy/`), Adapter (`adapter/`), Factory Method (`entity/factory/`), Observer (`observer/`) y Decorator (`decorator/`). El análisis de equipos compone Strategy y Decorator; los cambios académicos notifican observadores.
+
+La integración de talleres usa una frontera hexagonal: `AiWorkshopService` valida el caso de uso y depende del puerto `application/port/out/AiWorkshopPort`; `adapter/out/ai/AiWorkshopHttpAdapter` traduce ese puerto al protocolo HTTP del servicio Gemini. El controlador REST es el adaptador de entrada y se conserva la ruta pública existente.
+
+El proyecto todavía es mayoritariamente por capas; no es correcto describir todo el backend como hexagonal ya. La adopción se hace por módulos para evitar mover todas las entidades y APIs de una vez. Spring administra los servicios con alcance singleton, pero no se presenta como un Singleton manual. `RestClient.builder()` es uso de un builder de biblioteca, no un patrón Builder del dominio. No se encontró Abstract Factory ni Bridge en el código actual; no se agregan sin una segunda familia de proveedores o abstracciones que justifiquen su complejidad.
 
 ## Despliegue
 
