@@ -3,6 +3,7 @@ package fairteam_backend.adapter.out.ai;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Locale;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,7 +48,7 @@ public class AiWorkshopHttpAdapter implements AiWorkshopPort {
 
     @Override
     public WorkshopGenerationResponseDTO generate(
-            MultipartFile file,
+            List<MultipartFile> files,
             String subject,
             String targetLevel,
             String learningObjective,
@@ -60,20 +61,19 @@ public class AiWorkshopHttpAdapter implements AiWorkshopPort {
         }
 
         try {
-            String filename = safeFilename(file.getOriginalFilename());
-            HttpHeaders fileHeaders = new HttpHeaders();
-            fileHeaders.setContentType(MediaType.parseMediaType(contentTypeFor(filename)));
-            fileHeaders.setContentDisposition(ContentDisposition.formData()
-                    .name("file").filename(filename).build());
-
-            ByteArrayResource fileResource = new ByteArrayResource(file.getBytes()) {
-                @Override
-                public String getFilename() {
-                    return filename;
-                }
-            };
             MultiValueMap<String, Object> form = new LinkedMultiValueMap<>();
-            form.add("file", new HttpEntity<>(fileResource, fileHeaders));
+            for (MultipartFile file : files) {
+                String filename = safeFilename(file.getOriginalFilename());
+                HttpHeaders fileHeaders = new HttpHeaders();
+                fileHeaders.setContentType(MediaType.parseMediaType(contentTypeFor(filename)));
+                fileHeaders.setContentDisposition(ContentDisposition.formData()
+                        .name("files").filename(filename).build());
+                ByteArrayResource fileResource = new ByteArrayResource(file.getBytes()) {
+                    @Override
+                    public String getFilename() { return filename; }
+                };
+                form.add("files", new HttpEntity<>(fileResource, fileHeaders));
+            }
             form.add("subject", subject);
             form.add("targetLevel", targetLevel);
             form.add("learningObjective", learningObjective);

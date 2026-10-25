@@ -1,6 +1,7 @@
 package fairteam_backend.controller;
 
 import java.util.List;
+import java.util.HashSet;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -54,6 +55,28 @@ public class CourseMaterialController {
             @RequestParam(required = false) String generationType) {
         var material = service.findById(courseId, materialId);
         return aiWorkshopService.generateWorkshop(new StoredMaterialMultipartFile(material), subject, targetLevel,
+                learningObjective, learningContext, generationType);
+    }
+
+    @PostMapping(value = "/generate-workshop", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public WorkshopGenerationResponseDTO generateWorkshopFromMultipleMaterials(
+            @PathVariable Long courseId,
+            @RequestParam("materialIds") List<Long> materialIds,
+            @RequestParam String subject,
+            @RequestParam String targetLevel,
+            @RequestParam(required = false) String learningObjective,
+            @RequestParam(required = false) String learningContext,
+            @RequestParam(required = false) String generationType) {
+        if (materialIds == null || materialIds.isEmpty() || materialIds.size() > 6
+                || new HashSet<>(materialIds).size() != materialIds.size()) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Selecciona entre 1 y 6 materiales distintos.");
+        }
+        var files = materialIds.stream()
+                .map(id -> new StoredMaterialMultipartFile(service.findById(courseId, id)))
+                .map(file -> (MultipartFile) file)
+                .toList();
+        return aiWorkshopService.generateWorkshop(files, subject, targetLevel,
                 learningObjective, learningContext, generationType);
     }
 
