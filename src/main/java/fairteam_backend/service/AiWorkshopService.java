@@ -27,14 +27,16 @@ public class AiWorkshopService {
             String subject,
             String targetLevel,
             String learningObjective,
-            String learningContext) {
-        validate(file, subject, targetLevel, learningObjective, learningContext);
+            String learningContext,
+            String generationType) {
+        validate(file, subject, targetLevel, learningObjective, learningContext, generationType);
         return aiWorkshopPort.generate(
                 file,
                 subject.trim(),
                 normalizeLevel(targetLevel),
                 learningObjective == null ? "" : learningObjective.trim(),
-                learningContext == null ? "" : learningContext.trim());
+                learningContext == null ? "" : learningContext.trim(),
+                generationType == null ? "WORKSHOP" : generationType.trim().toUpperCase(Locale.ROOT));
     }
 
     private void validate(
@@ -42,7 +44,11 @@ public class AiWorkshopService {
             String subject,
             String targetLevel,
             String learningObjective,
-            String learningContext) {
+            String learningContext,
+            String generationType) {
+        if (generationType != null && !generationType.trim().matches("(?i)WORKSHOP|QUIZ")) {
+            throw new ResponseStatusException(BAD_REQUEST, "El tipo debe ser WORKSHOP o QUIZ.");
+        }
         if (file == null || file.isEmpty()) {
             throw new ResponseStatusException(BAD_REQUEST, "Debes adjuntar un archivo.");
         }

@@ -50,10 +50,11 @@ public class CourseMaterialController {
             @RequestParam String subject,
             @RequestParam String targetLevel,
             @RequestParam(required = false) String learningObjective,
-            @RequestParam(required = false) String learningContext) {
+            @RequestParam(required = false) String learningContext,
+            @RequestParam(required = false) String generationType) {
         var material = service.findById(courseId, materialId);
         return aiWorkshopService.generateWorkshop(new StoredMaterialMultipartFile(material), subject, targetLevel,
-                learningObjective, learningContext);
+                learningObjective, learningContext, generationType);
     }
 
     @DeleteMapping("/{materialId}")
