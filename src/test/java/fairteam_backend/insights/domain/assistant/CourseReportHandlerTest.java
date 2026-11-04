@@ -9,12 +9,12 @@ class CourseReportHandlerTest {
 
     @Test
     void answersItsIntent() {
-        AssistantReply reply = new Handlers.CourseReport().handle(AssistantFixture.query("genera el informe", ctx), ctx).orElseThrow();
+        AssistantReply reply = new CourseReportHandler().handle(AssistantFixture.query("genera el informe", ctx), ctx).orElseThrow();
         assertThat(reply.run().kind()).isEqualTo("report");
     }
 
     @Test
     void ignoresUnrelatedQuestions() {
-        assertThat(new Handlers.CourseReport().handle(AssistantFixture.query("zzz", ctx), ctx)).isEmpty();
+        assertThat(new CourseReportHandler().handle(AssistantFixture.query("zzz", ctx), ctx)).isEmpty();
     }
 }

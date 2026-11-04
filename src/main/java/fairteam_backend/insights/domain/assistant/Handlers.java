@@ -35,13 +35,6 @@ final class Handlers {
         return ReplyAction.of("workshop", label, "mode", mode, "level", level.name(), "topic", topic, "studentId", student == null ? null : String.valueOf(student.student().id()));
     }
 
-    static final class CourseReport implements IntentHandler {
-        public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
-            if (!q.has("informe", "reporte", "pdf", "imprimir")) return Optional.empty();
-            return Optional.of(AssistantReply.say("report", "Generé el informe de " + c.analysis().courseName() + ". Se abrirá para imprimir o guardar como PDF.").andRun(ReplyAction.of("report", "Generar informe")));
-        }
-    }
-
     static final class NeedsGrades implements IntentHandler {
         public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
             if (c.analysis().summary().gradeCount() > 0 || q.has("equipo", "importa", "sube", "material", "abre", "ir a", "llevame")) return Optional.empty();
