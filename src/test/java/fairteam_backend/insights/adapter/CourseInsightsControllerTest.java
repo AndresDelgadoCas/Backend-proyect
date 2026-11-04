@@ -85,6 +85,15 @@ class CourseInsightsControllerTest {
     }
 
     @Test
+    void trimsVeryLongQuestions() throws Exception {
+        String longQuestion = "quien viene bajando ".repeat(60);
+        mvc.perform(post("/api/courses/1/assistant").contentType(MediaType.APPLICATION_JSON).content("{\"question\":\"" + longQuestion + "\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.intent").value("falling-behind"));
+        mvc.perform(post("/api/courses/1/assistant").contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.intent").value("empty"));
+    }
+
+    @Test
     void draftsFeedbackInTheRequestedTone() throws Exception {
         mvc.perform(get("/api/courses/1/students/1/feedback").param("tone", "formal"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.tone").value("FORMAL"));
