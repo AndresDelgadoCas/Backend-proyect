@@ -1,9 +1,14 @@
 package fairteam_backend.insights.domain.feedback;
 
 public enum FeedbackTone {
-    CERCANO, FORMAL;
+    CERCANO, FORMAL, MOTIVADOR;
 
     public static FeedbackTone parse(String value) {
-        return value != null && value.equalsIgnoreCase("formal") ? FORMAL : CERCANO;
+        if (value == null) return CERCANO;
+        return switch (value.trim().toLowerCase()) {
+            case "formal" -> FORMAL;
+            case "motivador", "animo", "ánimo" -> MOTIVADOR;
+            default -> CERCANO;
+        };
     }
 }

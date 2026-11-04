@@ -18,7 +18,11 @@ import fairteam_backend.insights.domain.grading.ProjectionStatus;
 public abstract class FeedbackTemplate {
 
     public static FeedbackTemplate forTone(FeedbackTone tone) {
-        return tone == FeedbackTone.FORMAL ? new FormalFeedback() : new WarmFeedback();
+        return switch (tone) {
+            case FORMAL -> new FormalFeedback();
+            case MOTIVADOR -> new EncouragingFeedback();
+            default -> new WarmFeedback();
+        };
     }
 
     public final String compose(StudentPerformance student, GradeProjection projection, String course, String teacher) {
