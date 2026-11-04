@@ -9,13 +9,13 @@ class DraftMessageHandlerTest {
 
     @Test
     void answersItsIntent() {
-        AssistantReply reply = new Handlers.DraftMessage().handle(AssistantFixture.query("escríbele a santiago", ctx), ctx).orElseThrow();
+        AssistantReply reply = new DraftMessageHandler().handle(AssistantFixture.query("escríbele a santiago", ctx), ctx).orElseThrow();
         assertThat(reply.run().kind()).isEqualTo("message");
-        assertThat(new Handlers.DraftMessage().handle(AssistantFixture.query("redacta un mensaje", ctx), ctx).orElseThrow().text()).startsWith("¿A quién");
+        assertThat(new DraftMessageHandler().handle(AssistantFixture.query("redacta un mensaje", ctx), ctx).orElseThrow().text()).startsWith("¿A quién");
     }
 
     @Test
     void ignoresUnrelatedQuestions() {
-        assertThat(new Handlers.DraftMessage().handle(AssistantFixture.query("zzz", ctx), ctx)).isEmpty();
+        assertThat(new DraftMessageHandler().handle(AssistantFixture.query("zzz", ctx), ctx)).isEmpty();
     }
 }
