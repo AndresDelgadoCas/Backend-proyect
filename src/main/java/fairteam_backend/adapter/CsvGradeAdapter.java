@@ -41,8 +41,10 @@ public class CsvGradeAdapter implements GradeAdapter {
                 }
             }
 
-        } catch (IOException | NumberFormatException e) {
-            throw new RuntimeException("Error importing grades from CSV", e);
+        } catch (IOException e) {
+            throw new IllegalStateException("No se pudo leer el archivo de notas: " + filePath, e);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("El archivo de notas tiene un valor o una columna inválida: " + e.getMessage(), e);
         }
 
         return grades;
