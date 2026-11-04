@@ -3,7 +3,9 @@ package fairteam_backend.insights.adapter.in.web;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -47,6 +49,14 @@ public class CourseInsightsController {
     @GetMapping("/insights")
     public CourseInsightsUseCase.CourseInsights insights(@PathVariable long courseId, @AuthenticationPrincipal Jwt jwt) {
         return insights.insights(courseId, teacher(jwt));
+    }
+
+    @GetMapping("/insights/report.csv")
+    public ResponseEntity<String> csv(@PathVariable long courseId) {
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"seguimiento-curso-" + courseId + ".csv\"")
+                .contentType(new MediaType("text", "csv", java.nio.charset.StandardCharsets.UTF_8))
+                .body(insights.csvReport(courseId));
     }
 
     @PutMapping("/grading-scheme")
