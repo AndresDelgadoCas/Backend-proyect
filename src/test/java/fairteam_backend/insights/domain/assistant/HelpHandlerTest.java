@@ -9,12 +9,12 @@ class HelpHandlerTest {
 
     @Test
     void answersItsIntent() {
-        AssistantReply reply = new Handlers.Help().handle(AssistantFixture.query("¿qué puedes hacer?", ctx), ctx).orElseThrow();
+        AssistantReply reply = new HelpHandler().handle(AssistantFixture.query("¿qué puedes hacer?", ctx), ctx).orElseThrow();
         assertThat(reply.text()).contains("talleres y quizzes");
     }
 
     @Test
     void ignoresUnrelatedQuestions() {
-        assertThat(new Handlers.Help().handle(AssistantFixture.query("zzz", ctx), ctx)).isEmpty();
+        assertThat(new HelpHandler().handle(AssistantFixture.query("zzz", ctx), ctx)).isEmpty();
     }
 }

@@ -35,13 +35,6 @@ final class Handlers {
         return ReplyAction.of("workshop", label, "mode", mode, "level", level.name(), "topic", topic, "studentId", student == null ? null : String.valueOf(student.student().id()));
     }
 
-    static final class Help implements IntentHandler {
-        public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
-            if (!q.has("ayuda", "que puedes", "que sabes", "comandos", "como funcionas")) return Optional.empty();
-            return Optional.of(AssistantReply.say("help", "Puedo decirte cómo va el curso, quién necesita apoyo y quién viene bajando, calcular qué nota necesita alguien para pasar, crear talleres y quizzes, redactar mensajes a tus estudiantes y generar el informe del curso. Pregúntame como le preguntarías a un colega."));
-        }
-    }
-
     static final class NoCourseData implements IntentHandler {
         public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
             if (c.analysis().summary().students() > 0 || q.has("importa", "sube", "cargar", "estudiantes", "lista", "equipo")) return Optional.empty();
