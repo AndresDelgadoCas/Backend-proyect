@@ -84,6 +84,8 @@ Render debe usar Java 21 y configurar secretos y datos de conexión desde variab
 
 ## Módulo `insights`: el cerebro del asistente docente
 
+Documentación detallada: [arquitectura y patrones](docs/insights-architecture.md) · [API](docs/api-insights.md).
+
 Arquitectura hexagonal dentro de `fairteam_backend.insights`:
 
 | Capa | Paquete | Contenido |
