@@ -35,14 +35,6 @@ final class Handlers {
         return ReplyAction.of("workshop", label, "mode", mode, "level", level.name(), "topic", topic, "studentId", student == null ? null : String.valueOf(student.student().id()));
     }
 
-    static final class NeedsGrades implements IntentHandler {
-        public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
-            if (c.analysis().summary().gradeCount() > 0 || q.has("equipo", "importa", "sube", "material", "abre", "ir a", "llevame")) return Optional.empty();
-            return Optional.of(AssistantReply.say("needs-grades", "Aún no hay notas en " + c.analysis().courseName() + ". Cárgalas y podré responderte eso.")
-                    .withActions(ReplyAction.of("navigate", "Ir a estudiantes y notas", "route", "estudiantes")));
-        }
-    }
-
     static final class PassingGrade implements IntentHandler {
         public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
             if (!q.has("que nota", "cuanto debe", "cuanto necesita", "cuanto le falta", "necesita para", "necesita sacar", "para pasar", "para aprobar", "alcanza", "pierde", "perder", "aprueba", "gana el")) return Optional.empty();
