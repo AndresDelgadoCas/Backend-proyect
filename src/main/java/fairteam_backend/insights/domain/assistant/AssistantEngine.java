@@ -14,7 +14,7 @@ public class AssistantEngine {
                 new CreateActivityHandler(), new DraftMessageHandler(), new CourseReportHandler(), new NeedsGradesHandler(),
                 new PassingGradeHandler(), new MissingGradesHandler(), new CourseCountsHandler(), new SubjectExtremesHandler(), new PeriodComparisonHandler(), new FallingBehindHandler(), new ImprovingHandler(), new BestStudentsHandler(),
                 new StudentStatusHandler(), new AveragesHandler(), new WhoNeedsHelpHandler(), new NavigationHandler(),
-                new Handlers.Fallback()));
+                new FallbackHandler()));
     }
 
     public AssistantReply answer(String question, AssistantContext context) {

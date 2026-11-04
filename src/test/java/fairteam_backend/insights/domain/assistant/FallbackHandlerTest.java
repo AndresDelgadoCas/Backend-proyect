@@ -9,12 +9,12 @@ class FallbackHandlerTest {
 
     @Test
     void answersItsIntent() {
-        AssistantReply reply = new Handlers.Fallback().handle(AssistantFixture.query("lorem", ctx), ctx).orElseThrow();
+        AssistantReply reply = new FallbackHandler().handle(AssistantFixture.query("lorem", ctx), ctx).orElseThrow();
         assertThat(reply.intent()).isEqualTo("fallback");
     }
 
     @Test
     void ignoresUnrelatedQuestions() {
-        assertThat(new Handlers.Fallback().handle(AssistantFixture.query("zzz", ctx), ctx)).isPresent();
+        assertThat(new FallbackHandler().handle(AssistantFixture.query("zzz", ctx), ctx)).isPresent();
     }
 }

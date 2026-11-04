@@ -35,9 +35,4 @@ final class Handlers {
         return ReplyAction.of("workshop", label, "mode", mode, "level", level.name(), "topic", topic, "studentId", student == null ? null : String.valueOf(student.student().id()));
     }
 
-    static final class Fallback implements IntentHandler {
-        public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
-            return Optional.of(AssistantReply.say("fallback", "No estoy seguro de haberte entendido. Prueba con algo como: “¿quién viene bajando?” o “crea un quiz de funciones”."));
-        }
-    }
 }
