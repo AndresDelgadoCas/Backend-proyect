@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Unit tests (no database needed)
+        run: ./mvnw -B test -Dtest='!FairteamBackendApplicationTests' -Dsurefire.failIfNoSpecifiedTests=false
+      - name: Package
+        run: ./mvnw -B -DskipTests package
