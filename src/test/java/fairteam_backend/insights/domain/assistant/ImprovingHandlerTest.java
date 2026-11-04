@@ -9,13 +9,13 @@ class ImprovingHandlerTest {
 
     @Test
     void answersItsIntent() {
-        AssistantReply reply = new Handlers.Improving().handle(AssistantFixture.query("quién va mejorando", ctx), ctx).orElseThrow();
+        AssistantReply reply = new ImprovingHandler().handle(AssistantFixture.query("quién va mejorando", ctx), ctx).orElseThrow();
         assertThat(reply.items()).extracting(ReplyItem::name).containsExactly("Juan Pablo Castaño");
         assertThat(reply.items().get(0).value()).startsWith("+");
     }
 
     @Test
     void ignoresUnrelatedQuestions() {
-        assertThat(new Handlers.Improving().handle(AssistantFixture.query("zzz", ctx), ctx)).isEmpty();
+        assertThat(new ImprovingHandler().handle(AssistantFixture.query("zzz", ctx), ctx)).isEmpty();
     }
 }
