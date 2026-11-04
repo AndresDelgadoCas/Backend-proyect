@@ -8,15 +8,15 @@ class NoCourseDataHandlerTest {
     @Test
     void asksForTheRosterInAnEmptyCourse() {
         AssistantContext empty = AssistantFixture.emptyCourse();
-        AssistantReply reply = new Handlers.NoCourseData().handle(AssistantFixture.query("quien va mal", empty), empty).orElseThrow();
+        AssistantReply reply = new NoCourseDataHandler().handle(AssistantFixture.query("quien va mal", empty), empty).orElseThrow();
         assertThat(reply.text()).contains("todavía no tiene estudiantes");
     }
 
     @Test
     void letsNavigationThroughAndStaysQuietWithStudents() {
         AssistantContext empty = AssistantFixture.emptyCourse();
-        assertThat(new Handlers.NoCourseData().handle(AssistantFixture.query("importar estudiantes", empty), empty)).isEmpty();
+        assertThat(new NoCourseDataHandler().handle(AssistantFixture.query("importar estudiantes", empty), empty)).isEmpty();
         AssistantContext ctx = AssistantFixture.context();
-        assertThat(new Handlers.NoCourseData().handle(AssistantFixture.query("quien va mal", ctx), ctx)).isEmpty();
+        assertThat(new NoCourseDataHandler().handle(AssistantFixture.query("quien va mal", ctx), ctx)).isEmpty();
     }
 }

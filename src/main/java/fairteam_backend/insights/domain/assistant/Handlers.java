@@ -35,14 +35,6 @@ final class Handlers {
         return ReplyAction.of("workshop", label, "mode", mode, "level", level.name(), "topic", topic, "studentId", student == null ? null : String.valueOf(student.student().id()));
     }
 
-    static final class NoCourseData implements IntentHandler {
-        public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
-            if (c.analysis().summary().students() > 0 || q.has("importa", "sube", "cargar", "estudiantes", "lista", "equipo")) return Optional.empty();
-            return Optional.of(AssistantReply.say("no-students", c.analysis().courseName() + " todavía no tiene estudiantes. Importa la lista del grupo y te ayudo con todo lo demás.")
-                    .withActions(ReplyAction.of("navigate", "Ir a estudiantes", "route", "estudiantes")));
-        }
-    }
-
     static final class DailyBriefing implements IntentHandler {
         public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
             if (!q.has("resumen", "como va el curso", "como vamos", "como va todo", "que hago hoy", "que hay hoy", "buenos dias", "buenas tardes", "buenas noches", "novedades", "informame", "ponme al dia")) return Optional.empty();
