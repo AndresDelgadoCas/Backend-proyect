@@ -3,6 +3,7 @@ package fairteam_backend.insights.config;
 import java.time.Clock;
 import java.time.ZoneId;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -12,6 +13,7 @@ import fairteam_backend.insights.application.service.CourseInsightsService;
 import fairteam_backend.insights.domain.CourseAnalyzer;
 import fairteam_backend.insights.domain.assistant.AssistantEngine;
 import fairteam_backend.insights.domain.grading.GradeProjector;
+import fairteam_backend.insights.domain.risk.GradeOnlyRiskStrategy;
 import fairteam_backend.insights.domain.risk.RiskScoringStrategy;
 import fairteam_backend.insights.domain.risk.TrendWeightedRiskStrategy;
 
@@ -19,8 +21,11 @@ import fairteam_backend.insights.domain.risk.TrendWeightedRiskStrategy;
 @Configuration
 public class InsightsConfiguration {
 
+    /** Strategy chosen by configuration: fairteam.insights.risk=trend (default) or grade-only. */
     @Bean
-    RiskScoringStrategy riskScoringStrategy() { return new TrendWeightedRiskStrategy(); }
+    RiskScoringStrategy riskScoringStrategy(@Value("${fairteam.insights.risk:trend}") String kind) {
+        return "grade-only".equalsIgnoreCase(kind) ? new GradeOnlyRiskStrategy() : new TrendWeightedRiskStrategy();
+    }
 
     @Bean
     CourseInsightsService courseInsightsService(CourseDataPort courseData, GradingSchemePort schemes, RiskScoringStrategy risk) {
