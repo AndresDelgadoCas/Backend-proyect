@@ -35,17 +35,6 @@ final class Handlers {
         return ReplyAction.of("workshop", label, "mode", mode, "level", level.name(), "topic", topic, "studentId", student == null ? null : String.valueOf(student.student().id()));
     }
 
-    static final class MissingGrades implements IntentHandler {
-        public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
-            if (!q.has("sin notas", "no tiene notas", "no tienen notas", "falta nota", "faltan notas", "sin calificacion")) return Optional.empty();
-            List<StudentPerformance> missing = c.analysis().students().stream().filter(p -> !p.hasGrades()).toList();
-            if (missing.isEmpty()) return Optional.of(AssistantReply.say("missing-grades", "Todos tus estudiantes tienen al menos una nota."));
-            return Optional.of(AssistantReply.say("missing-grades", Grades.plural(missing.size(), "estudiante no tiene", "estudiantes no tienen") + " notas todavía. Revisa si faltan en el archivo.")
-                    .withItems(missing.stream().limit(8).map(p -> item(p, "—", "sin notas")).toList())
-                    .withActions(ReplyAction.of("navigate", "Ver quiénes", "route", "estudiantes", "filtro", "sin-notas")));
-        }
-    }
-
     static final class CourseCounts implements IntentHandler {
         public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
             if (!q.has("cuantos estudiantes", "cuantos alumnos", "cuantos son", "tamano del curso", "cuantas notas")) return Optional.empty();

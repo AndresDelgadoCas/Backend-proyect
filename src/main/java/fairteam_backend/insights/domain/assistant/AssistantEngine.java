@@ -12,7 +12,7 @@ public class AssistantEngine {
         return new AssistantEngine(List.of(
                 new SwitchCourseHandler(), new HelpHandler(), new NoCourseDataHandler(), new DailyBriefingHandler(),
                 new CreateActivityHandler(), new DraftMessageHandler(), new CourseReportHandler(), new NeedsGradesHandler(),
-                new PassingGradeHandler(), new Handlers.MissingGrades(), new Handlers.CourseCounts(), new Handlers.SubjectExtremes(), new Handlers.PeriodComparison(), new FallingBehindHandler(), new ImprovingHandler(), new BestStudentsHandler(),
+                new PassingGradeHandler(), new MissingGradesHandler(), new Handlers.CourseCounts(), new Handlers.SubjectExtremes(), new Handlers.PeriodComparison(), new FallingBehindHandler(), new ImprovingHandler(), new BestStudentsHandler(),
                 new StudentStatusHandler(), new AveragesHandler(), new WhoNeedsHelpHandler(), new NavigationHandler(),
                 new Handlers.Fallback()));
     }

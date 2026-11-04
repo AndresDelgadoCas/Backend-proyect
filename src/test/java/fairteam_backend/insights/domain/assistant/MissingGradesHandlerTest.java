@@ -9,13 +9,13 @@ class MissingGradesHandlerTest {
 
     @Test
     void listsStudentsWithoutGrades() {
-        AssistantReply reply = new Handlers.MissingGrades().handle(AssistantFixture.query("¿quién no tiene notas?", ctx), ctx).orElseThrow();
+        AssistantReply reply = new MissingGradesHandler().handle(AssistantFixture.query("¿quién no tiene notas?", ctx), ctx).orElseThrow();
         assertThat(reply.items()).extracting(ReplyItem::name).containsExactly("Camila Ospina");
         assertThat(reply.actions().get(0).params()).containsEntry("filtro", "sin-notas");
     }
 
     @Test
     void ignoresOtherQuestions() {
-        assertThat(new Handlers.MissingGrades().handle(AssistantFixture.query("promedio", ctx), ctx)).isEmpty();
+        assertThat(new MissingGradesHandler().handle(AssistantFixture.query("promedio", ctx), ctx)).isEmpty();
     }
 }
