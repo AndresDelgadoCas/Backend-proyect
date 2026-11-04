@@ -9,13 +9,13 @@ class FallingBehindHandlerTest {
 
     @Test
     void answersItsIntent() {
-        AssistantReply reply = new Handlers.FallingBehind().handle(AssistantFixture.query("¿quién viene bajando?", ctx), ctx).orElseThrow();
+        AssistantReply reply = new FallingBehindHandler().handle(AssistantFixture.query("¿quién viene bajando?", ctx), ctx).orElseThrow();
         assertThat(reply.items()).extracting(ReplyItem::name).containsExactly("Valentina Rojas");
         assertThat(reply.items().get(0).value()).isEqualTo("−0,7");
     }
 
     @Test
     void ignoresUnrelatedQuestions() {
-        assertThat(new Handlers.FallingBehind().handle(AssistantFixture.query("zzz", ctx), ctx)).isEmpty();
+        assertThat(new FallingBehindHandler().handle(AssistantFixture.query("zzz", ctx), ctx)).isEmpty();
     }
 }

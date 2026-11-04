@@ -35,21 +35,6 @@ final class Handlers {
         return ReplyAction.of("workshop", label, "mode", mode, "level", level.name(), "topic", topic, "studentId", student == null ? null : String.valueOf(student.student().id()));
     }
 
-    static final class FallingBehind implements IntentHandler {
-        public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
-            if (!q.has("bajando", "bajado", "empeor", "cayendo", "riesgo", "preocup", "alerta")) return Optional.empty();
-            ReplyAction trends = ReplyAction.of("navigate", "Ver tendencias", "route", "seguimiento", "vista", "tendencia");
-            List<StudentPerformance> down = c.analysis().students().stream().filter(p -> p.direction() == Direction.DOWN)
-                    .sorted(Comparator.comparingDouble(StudentPerformance::delta)).toList();
-            if (down.isEmpty()) {
-                boolean twoPeriods = c.analysis().periods().size() >= 2;
-                return Optional.of(AssistantReply.say("falling-behind", twoPeriods ? "Buenas noticias: nadie ha bajado más de 0,3 entre cortes." : "Necesito notas de al menos dos cortes para ver tendencias.").withActions(trends));
-            }
-            return Optional.of(AssistantReply.say("falling-behind", Grades.plural(down.size(), "estudiante viene", "estudiantes vienen") + " bajando. " + Grades.firstName(down.get(0).student().name()) + " es quien más bajó.")
-                    .withItems(down.stream().limit(6).map(p -> item(p, "−" + Grades.format(Math.abs(p.delta())), path(p))).toList()).withActions(trends));
-        }
-    }
-
     static final class Improving implements IntentHandler {
         public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
             if (!q.has("subiendo", "mejorando", "mejoro", "mejorado", "progreso")) return Optional.empty();
