@@ -9,13 +9,13 @@ class AveragesHandlerTest {
 
     @Test
     void answersItsIntent() {
-        AssistantReply reply = new Handlers.Averages().handle(AssistantFixture.query("promedio de funciones", ctx), ctx).orElseThrow();
+        AssistantReply reply = new AveragesHandler().handle(AssistantFixture.query("promedio de funciones", ctx), ctx).orElseThrow();
         assertThat(reply.text()).startsWith("En Funciones el promedio es");
-        assertThat(new Handlers.Averages().handle(AssistantFixture.query("promedio del curso", ctx), ctx).orElseThrow().text()).startsWith("El promedio de Programación I");
+        assertThat(new AveragesHandler().handle(AssistantFixture.query("promedio del curso", ctx), ctx).orElseThrow().text()).startsWith("El promedio de Programación I");
     }
 
     @Test
     void ignoresUnrelatedQuestions() {
-        assertThat(new Handlers.Averages().handle(AssistantFixture.query("zzz", ctx), ctx)).isEmpty();
+        assertThat(new AveragesHandler().handle(AssistantFixture.query("zzz", ctx), ctx)).isEmpty();
     }
 }

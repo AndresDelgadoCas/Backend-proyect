@@ -35,23 +35,6 @@ final class Handlers {
         return ReplyAction.of("workshop", label, "mode", mode, "level", level.name(), "topic", topic, "studentId", student == null ? null : String.valueOf(student.student().id()));
     }
 
-    static final class Averages implements IntentHandler {
-        public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
-            if (!q.has("promedio", "media", "nota del curso", "como van")) return Optional.empty();
-            SubjectAverage subject = q.subject();
-            if (subject != null) {
-                return Optional.of(AssistantReply.say("average", "En " + subject.name() + " el promedio es " + Grades.format(subject.average())
-                        + (subject.studentsBelowPassing() > 0 ? " y " + Grades.plural(subject.studentsBelowPassing(), "estudiante está", "estudiantes están") + " por debajo de 3,0" : "") + ".")
-                        .withActions(workshop("Taller de " + subject.name(), "workshop", Level.LOW, subject.name(), null)));
-            }
-            CourseSummary s = c.analysis().summary();
-            List<SubjectAverage> subjects = c.analysis().subjects();
-            String extra = subjects.isEmpty() ? "" : " El tema más bajo es " + subjects.get(0).name() + " (" + Grades.format(subjects.get(0).average()) + ") y el más alto "
-                    + subjects.get(subjects.size() - 1).name() + " (" + Grades.format(subjects.get(subjects.size() - 1).average()) + ").";
-            return Optional.of(AssistantReply.say("average", "El promedio de " + c.analysis().courseName() + " es " + Grades.format(s.average()) + " con " + Grades.plural(s.gradeCount(), "nota", "notas") + "." + extra));
-        }
-    }
-
     static final class WhoNeedsHelp implements IntentHandler {
         public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
             if (!q.has("quien", "quienes", "cuales", "cuantos", "lista") && q.level() == null && q.subject() == null) return Optional.empty();
