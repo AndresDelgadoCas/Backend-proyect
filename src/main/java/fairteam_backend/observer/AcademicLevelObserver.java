@@ -1,9 +1,12 @@
 package fairteam_backend.observer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class AcademicLevelObserver implements AcademicObserver {
+    private static final Logger log = LoggerFactory.getLogger(AcademicLevelObserver.class);
 
     /** Same rule the teacher sees in FairTeam: classify on the grade rounded to one decimal. */
     public static String levelFor(double grade) {
@@ -15,9 +18,6 @@ public class AcademicLevelObserver implements AcademicObserver {
 
     @Override
     public void update(AcademicEvent event) {
-        System.out.println(
-                "Student " + event.getStudentId()
-                        + " academic level updated to " + levelFor(event.getNewGrade())
-        );
+        log.info("Student {} academic level updated to {}", event.getStudentId(), levelFor(event.getNewGrade()));
     }
 }
