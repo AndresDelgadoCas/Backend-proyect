@@ -15,4 +15,7 @@ public interface CourseInsightsUseCase {
     CourseInsights insights(long courseId, String teacherName);
 
     SchemeView updateScheme(long courseId, GradingScheme scheme);
+
+    /** The follow-up report of the course as CSV. */
+    String csvReport(long courseId);
 }

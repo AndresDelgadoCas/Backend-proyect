@@ -18,6 +18,7 @@ import fairteam_backend.insights.application.port.out.CourseDataPort.CourseData;
 import fairteam_backend.insights.application.port.out.GradingSchemePort;
 import fairteam_backend.insights.domain.CourseAnalysis;
 import fairteam_backend.insights.domain.CourseAnalyzer;
+import fairteam_backend.insights.domain.CourseCsvReport;
 import fairteam_backend.insights.domain.StudentPerformance;
 import fairteam_backend.insights.domain.assistant.AssistantContext;
 import fairteam_backend.insights.domain.assistant.AssistantEngine;
@@ -83,6 +84,12 @@ public class CourseInsightsService implements CourseInsightsUseCase, DraftFeedba
         courseData.load(courseId).orElseThrow(() -> new CourseNotFoundException(courseId));
         schemes.save(courseId, scheme);
         return read(courseId).scheme();
+    }
+
+    @Override
+    public String csvReport(long courseId) {
+        Reading r = read(courseId);
+        return CourseCsvReport.of(r.analysis(), r.projections());
     }
 
     @Override
