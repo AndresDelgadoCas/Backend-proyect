@@ -9,13 +9,13 @@ class SwitchCourseHandlerTest {
 
     @Test
     void answersItsIntent() {
-        AssistantReply reply = new Handlers.SwitchCourse().handle(AssistantFixture.query("cambia a estructuras", ctx), ctx).orElseThrow();
+        AssistantReply reply = new SwitchCourseHandler().handle(AssistantFixture.query("cambia a estructuras", ctx), ctx).orElseThrow();
         assertThat(reply.run().params()).containsEntry("courseId", "11");
-        assertThat(new Handlers.SwitchCourse().handle(AssistantFixture.query("cambia a programacion", ctx), ctx)).isEmpty();
+        assertThat(new SwitchCourseHandler().handle(AssistantFixture.query("cambia a programacion", ctx), ctx)).isEmpty();
     }
 
     @Test
     void ignoresUnrelatedQuestions() {
-        assertThat(new Handlers.SwitchCourse().handle(AssistantFixture.query("zzz", ctx), ctx)).isEmpty();
+        assertThat(new SwitchCourseHandler().handle(AssistantFixture.query("zzz", ctx), ctx)).isEmpty();
     }
 }

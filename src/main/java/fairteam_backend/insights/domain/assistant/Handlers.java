@@ -35,16 +35,6 @@ final class Handlers {
         return ReplyAction.of("workshop", label, "mode", mode, "level", level.name(), "topic", topic, "studentId", student == null ? null : String.valueOf(student.student().id()));
     }
 
-    static final class SwitchCourse implements IntentHandler {
-        public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
-            if (!q.has("cambia", "abre el curso", "ir al curso", "curso de")) return Optional.empty();
-            return c.courses().stream().filter(course -> course.id() != c.analysis().courseId())
-                    .filter(course -> List.of(AssistantQuery.normalize(course.name()).split(" ")).stream().anyMatch(w -> w.length() > 3 && q.text().contains(w)))
-                    .findFirst().map(course -> AssistantReply.say("switch-course", "Listo, abrí " + course.name() + ".")
-                            .andRun(ReplyAction.of("course", course.name(), "courseId", String.valueOf(course.id()))));
-        }
-    }
-
     static final class Help implements IntentHandler {
         public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
             if (!q.has("ayuda", "que puedes", "que sabes", "comandos", "como funcionas")) return Optional.empty();
