@@ -9,13 +9,13 @@ class NavigationHandlerTest {
 
     @Test
     void answersItsIntent() {
-        AssistantReply reply = new Handlers.Navigation().handle(AssistantFixture.query("abre el simulador", ctx), ctx).orElseThrow();
+        AssistantReply reply = new NavigationHandler().handle(AssistantFixture.query("abre el simulador", ctx), ctx).orElseThrow();
         assertThat(reply.run().params()).containsEntry("route", "seguimiento").containsEntry("vista", "simulador");
-        assertThat(new Handlers.Navigation().handle(AssistantFixture.query("llévame a los ajustes", ctx), ctx).orElseThrow().run().params()).containsEntry("route", "ajustes");
+        assertThat(new NavigationHandler().handle(AssistantFixture.query("llévame a los ajustes", ctx), ctx).orElseThrow().run().params()).containsEntry("route", "ajustes");
     }
 
     @Test
     void ignoresUnrelatedQuestions() {
-        assertThat(new Handlers.Navigation().handle(AssistantFixture.query("zzz", ctx), ctx)).isEmpty();
+        assertThat(new NavigationHandler().handle(AssistantFixture.query("zzz", ctx), ctx)).isEmpty();
     }
 }
