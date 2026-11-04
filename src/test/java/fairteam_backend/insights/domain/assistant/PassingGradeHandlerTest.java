@@ -9,14 +9,14 @@ class PassingGradeHandlerTest {
 
     @Test
     void answersItsIntent() {
-        AssistantReply reply = new Handlers.PassingGrade().handle(AssistantFixture.query("¿qué nota necesita valentina para pasar?", ctx), ctx).orElseThrow();
+        AssistantReply reply = new PassingGradeHandler().handle(AssistantFixture.query("¿qué nota necesita valentina para pasar?", ctx), ctx).orElseThrow();
         assertThat(reply.text()).startsWith("Valentina Rojas: Necesita");
-        AssistantReply group = new Handlers.PassingGrade().handle(AssistantFixture.query("quien puede perder", ctx), ctx).orElseThrow();
+        AssistantReply group = new PassingGradeHandler().handle(AssistantFixture.query("quien puede perder", ctx), ctx).orElseThrow();
         assertThat(group.items()).extracting(ReplyItem::name).contains("Valentina Rojas");
     }
 
     @Test
     void ignoresUnrelatedQuestions() {
-        assertThat(new Handlers.PassingGrade().handle(AssistantFixture.query("zzz", ctx), ctx)).isEmpty();
+        assertThat(new PassingGradeHandler().handle(AssistantFixture.query("zzz", ctx), ctx)).isEmpty();
     }
 }
