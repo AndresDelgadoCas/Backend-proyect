@@ -286,6 +286,21 @@ final class Handlers {
         }
     }
 
+    static final class SubjectExtremes implements IntentHandler {
+        public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
+            if (!q.has("tema", "temas", "materia")) return Optional.empty();
+            boolean easiest = q.has("facil", "mejor", "mas alto");
+            boolean hardest = q.has("dificil", "cuesta", "peor", "mas bajo", "flojo");
+            List<SubjectAverage> subjects = c.analysis().subjects();
+            if ((!easiest && !hardest) || subjects.isEmpty()) return Optional.empty();
+            SubjectAverage pick = easiest ? subjects.get(subjects.size() - 1) : subjects.get(0);
+            String text = (easiest ? "El tema con mejor promedio es " : "El tema que más cuesta es ") + pick.name() + ", con " + Grades.format(pick.average())
+                    + (pick.studentsBelowPassing() > 0 ? "; " + Grades.plural(pick.studentsBelowPassing(), "estudiante está", "estudiantes están") + " por debajo de 3,0." : ".");
+            AssistantReply reply = AssistantReply.say("subject-extremes", text);
+            return Optional.of(easiest ? reply : reply.withActions(workshop("Taller de " + pick.name(), "workshop", Level.LOW, pick.name(), null)));
+        }
+    }
+
     static final class Fallback implements IntentHandler {
         public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
             return Optional.of(AssistantReply.say("fallback", "No estoy seguro de haberte entendido. Prueba con algo como: “¿quién viene bajando?” o “crea un quiz de funciones”."));
