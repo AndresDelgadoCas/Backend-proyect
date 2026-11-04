@@ -8,8 +8,6 @@ import fairteam_backend.insights.domain.Direction;
 import fairteam_backend.insights.domain.Grades;
 import fairteam_backend.insights.domain.Level;
 import fairteam_backend.insights.domain.StudentPerformance;
-import fairteam_backend.insights.domain.grading.GradeProjection;
-import fairteam_backend.insights.domain.grading.ProjectionStatus;
 
 /** "¿Qué me recomiendas?": the three most useful next steps for the teacher, from the data. */
 final class TeacherAdviceHandler implements IntentHandler {

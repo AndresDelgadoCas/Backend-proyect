@@ -1,18 +1,6 @@
 package fairteam_backend.insights.domain.assistant;
 
-import java.util.Comparator;
-import java.util.List;
 import java.util.Optional;
-
-import fairteam_backend.insights.domain.CourseSummary;
-import fairteam_backend.insights.domain.Direction;
-import fairteam_backend.insights.domain.Grades;
-import fairteam_backend.insights.domain.Level;
-import fairteam_backend.insights.domain.PeriodAverage;
-import fairteam_backend.insights.domain.StudentPerformance;
-import fairteam_backend.insights.domain.SubjectAverage;
-import fairteam_backend.insights.domain.grading.GradeProjection;
-import fairteam_backend.insights.domain.grading.ProjectionStatus;
 
 /** Generates the printable course report. */
 final class CourseReportHandler implements IntentHandler {
