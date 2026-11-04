@@ -35,18 +35,6 @@ final class Handlers {
         return ReplyAction.of("workshop", label, "mode", mode, "level", level.name(), "topic", topic, "studentId", student == null ? null : String.valueOf(student.student().id()));
     }
 
-    static final class DailyBriefing implements IntentHandler {
-        public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
-            if (!q.has("resumen", "como va el curso", "como vamos", "como va todo", "que hago hoy", "que hay hoy", "buenos dias", "buenas tardes", "buenas noches", "novedades", "informame", "ponme al dia")) return Optional.empty();
-            CourseSummary s = c.analysis().summary();
-            AssistantReply reply = AssistantReply.say("briefing", c.briefing());
-            String topic = c.analysis().weakestSubject().map(SubjectAverage::name).orElse(null);
-            return Optional.of(s.low() > 0
-                    ? reply.withActions(workshop("Preparar refuerzo", "workshop", Level.LOW, topic, null), ReplyAction.of("navigate", "Ver seguimiento", "route", "seguimiento"))
-                    : reply.withActions(ReplyAction.of("navigate", "Ver seguimiento", "route", "seguimiento")));
-        }
-    }
-
     static final class CreateActivity implements IntentHandler {
         public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
             if (!q.has("crea", "genera", "prepara", "haz", "hazme", "arma", "disena", "quiero un", "necesito un")) return Optional.empty();

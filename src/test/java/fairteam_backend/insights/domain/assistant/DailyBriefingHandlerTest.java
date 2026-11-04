@@ -9,13 +9,13 @@ class DailyBriefingHandlerTest {
 
     @Test
     void answersItsIntent() {
-        AssistantReply reply = new Handlers.DailyBriefing().handle(AssistantFixture.query("¿cómo va el curso?", ctx), ctx).orElseThrow();
+        AssistantReply reply = new DailyBriefingHandler().handle(AssistantFixture.query("¿cómo va el curso?", ctx), ctx).orElseThrow();
         assertThat(reply.text()).isEqualTo(ctx.briefing());
         assertThat(reply.actions()).extracting(ReplyAction::label).contains("Preparar refuerzo");
     }
 
     @Test
     void ignoresUnrelatedQuestions() {
-        assertThat(new Handlers.DailyBriefing().handle(AssistantFixture.query("zzz", ctx), ctx)).isEmpty();
+        assertThat(new DailyBriefingHandler().handle(AssistantFixture.query("zzz", ctx), ctx)).isEmpty();
     }
 }
