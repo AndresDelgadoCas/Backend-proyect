@@ -1,20 +1,11 @@
 package fairteam_backend.insights.domain.assistant;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-
-import fairteam_backend.insights.domain.CourseSummary;
-import fairteam_backend.insights.domain.Direction;
 import fairteam_backend.insights.domain.Grades;
 import fairteam_backend.insights.domain.Level;
 import fairteam_backend.insights.domain.PeriodAverage;
 import fairteam_backend.insights.domain.StudentPerformance;
-import fairteam_backend.insights.domain.SubjectAverage;
-import fairteam_backend.insights.domain.grading.GradeProjection;
-import fairteam_backend.insights.domain.grading.ProjectionStatus;
 
-/** The assistant's skills, one handler per intent, in the order {@link AssistantEngine} asks them. */
+/** Small helpers shared by the intent handlers: student cards, trend paths and workshop actions. */
 final class Handlers {
     private Handlers() { }
 
@@ -34,5 +25,4 @@ final class Handlers {
     static ReplyAction workshop(String label, String mode, Level level, String topic, StudentPerformance student) {
         return ReplyAction.of("workshop", label, "mode", mode, "level", level.name(), "topic", topic, "studentId", student == null ? null : String.valueOf(student.student().id()));
     }
-
 }
