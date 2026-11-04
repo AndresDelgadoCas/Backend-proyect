@@ -9,13 +9,13 @@ class StudentStatusHandlerTest {
 
     @Test
     void answersItsIntent() {
-        AssistantReply reply = new Handlers.StudentStatus().handle(AssistantFixture.query("¿cómo va valentina?", ctx), ctx).orElseThrow();
+        AssistantReply reply = new StudentStatusHandler().handle(AssistantFixture.query("¿cómo va valentina?", ctx), ctx).orElseThrow();
         assertThat(reply.text()).contains("Viene bajando").contains("Ciclos y condicionales");
         assertThat(reply.actions()).extracting(ReplyAction::kind).containsExactly("review", "workshop", "message");
     }
 
     @Test
     void ignoresUnrelatedQuestions() {
-        assertThat(new Handlers.StudentStatus().handle(AssistantFixture.query("zzz", ctx), ctx)).isEmpty();
+        assertThat(new StudentStatusHandler().handle(AssistantFixture.query("zzz", ctx), ctx)).isEmpty();
     }
 }
