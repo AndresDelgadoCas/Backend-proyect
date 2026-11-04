@@ -35,18 +35,6 @@ final class Handlers {
         return ReplyAction.of("workshop", label, "mode", mode, "level", level.name(), "topic", topic, "studentId", student == null ? null : String.valueOf(student.student().id()));
     }
 
-    static final class BestStudents implements IntentHandler {
-        public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
-            if (!q.has("mejor", "mejores", "destacad", "top", "quien va bien", "quienes van bien")) return Optional.empty();
-            List<StudentPerformance> best = c.analysis().students().stream().filter(StudentPerformance::hasGrades)
-                    .sorted(Comparator.comparingDouble(StudentPerformance::average).reversed()).limit(5).toList();
-            if (best.isEmpty()) return Optional.empty();
-            return Optional.of(AssistantReply.say("best", Grades.firstName(best.get(0).student().name()) + " lleva el mejor promedio con " + Grades.format(best.get(0).average()) + ".")
-                    .withItems(best.stream().map(p -> item(p, Grades.format(p.average()), p.level().label())).toList())
-                    .withActions(workshop("Crear un reto", "workshop", Level.HIGH, null, null)));
-        }
-    }
-
     static final class StudentStatus implements IntentHandler {
         public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
             StudentPerformance s = q.student();
