@@ -12,6 +12,7 @@ import fairteam_backend.insights.application.StudentNotFoundException;
 import fairteam_backend.insights.application.port.in.AskAssistantUseCase;
 import fairteam_backend.insights.application.port.in.CourseInsightsUseCase;
 import fairteam_backend.insights.application.port.in.DraftFeedbackUseCase;
+import fairteam_backend.insights.application.port.in.TeacherOverviewUseCase;
 import fairteam_backend.insights.application.port.out.CourseDataPort;
 import fairteam_backend.insights.application.port.out.CourseDataPort.CourseData;
 import fairteam_backend.insights.application.port.out.GradingSchemePort;
@@ -32,7 +33,7 @@ import fairteam_backend.insights.domain.grading.GradingScheme;
  * Application service: orchestrates the domain (analyzer, projector, briefing, feedback, assistant)
  * through the outbound ports. It has no Spring or JPA imports, so it is unit-testable with fakes.
  */
-public class CourseInsightsService implements CourseInsightsUseCase, DraftFeedbackUseCase, AskAssistantUseCase {
+public class CourseInsightsService implements CourseInsightsUseCase, DraftFeedbackUseCase, AskAssistantUseCase, TeacherOverviewUseCase {
     private final CourseDataPort courseData;
     private final GradingSchemePort schemes;
     private final CourseAnalyzer analyzer;
@@ -98,5 +99,19 @@ public class CourseInsightsService implements CourseInsightsUseCase, DraftFeedba
         AssistantContext context = new AssistantContext(teacherName, r.analysis(), r.projections(), r.data().materials(),
                 courseData.courses(), briefing(r, teacherName));
         return assistant.answer(question, context);
+    }
+
+    @Override
+    public List<CourseOverview> overview() {
+        List<CourseOverview> rows = new ArrayList<>();
+        for (var course : courseData.courses()) {
+            courseData.load(course.id()).ifPresent(data -> {
+                CourseAnalysis a = analyzer.analyze(data.id(), data.name(), data.students(), data.grades());
+                var s = a.summary();
+                rows.add(new CourseOverview(data.id(), data.name(), s.students(), s.average(), s.low(), s.fallingBehind(), s.ungraded(),
+                        a.weakestSubject().map(x -> x.name()).orElse(null)));
+            });
+        }
+        return List.copyOf(rows);
     }
 }
