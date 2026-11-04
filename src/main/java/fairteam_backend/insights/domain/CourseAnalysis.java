@@ -10,7 +10,8 @@ public record CourseAnalysis(
         CourseSummary summary,
         List<String> periods,
         List<SubjectAverage> subjects,
-        List<StudentPerformance> students) {
+        List<StudentPerformance> students,
+        List<GradeBand> distribution) {
 
     public Optional<StudentPerformance> student(long id) {
         return students.stream().filter(s -> s.student().id() == id).findFirst();

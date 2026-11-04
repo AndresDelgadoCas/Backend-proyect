@@ -41,7 +41,7 @@ public class CourseAnalyzer {
                 grades.isEmpty() ? null : Grades.average(grades.stream().map(GradeRecord::value).toList()),
                 grades.size(),
                 (int) performances.stream().filter(p -> p.direction() == Direction.DOWN).count());
-        return new CourseAnalysis(courseId, courseName, summary, periods, subjects, List.copyOf(performances));
+        return new CourseAnalysis(courseId, courseName, summary, periods, subjects, List.copyOf(performances), GradeBand.of(performances));
     }
 
     private StudentPerformance perform(StudentRef student, List<GradeRecord> own, List<String> periods) {
