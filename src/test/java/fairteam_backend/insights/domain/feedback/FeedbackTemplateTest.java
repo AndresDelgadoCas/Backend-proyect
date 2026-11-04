@@ -43,6 +43,8 @@ class FeedbackTemplateTest {
     void parsesToneLeniently() {
         assertThat(FeedbackTone.parse("FORMAL")).isEqualTo(FeedbackTone.FORMAL);
         assertThat(FeedbackTone.parse("lo que sea")).isEqualTo(FeedbackTone.CERCANO);
+        assertThat(FeedbackTone.parse(" Motivador ")).isEqualTo(FeedbackTone.MOTIVADOR);
+        assertThat(FeedbackTone.parse("ánimo")).isEqualTo(FeedbackTone.MOTIVADOR);
         assertThat(FeedbackTone.parse(null)).isEqualTo(FeedbackTone.CERCANO);
     }
 }
