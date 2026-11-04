@@ -35,23 +35,6 @@ final class Handlers {
         return ReplyAction.of("workshop", label, "mode", mode, "level", level.name(), "topic", topic, "studentId", student == null ? null : String.valueOf(student.student().id()));
     }
 
-    static final class CreateActivity implements IntentHandler {
-        public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
-            if (!q.has("crea", "genera", "prepara", "haz", "hazme", "arma", "disena", "quiero un", "necesito un")) return Optional.empty();
-            if (!q.has("taller", "quiz", "evaluacion", "actividad", "examen", "prueba", "guia", "refuerzo")) return Optional.empty();
-            String mode = q.has("quiz", "evaluacion", "examen", "prueba") ? "quiz" : "workshop";
-            StudentPerformance student = q.student();
-            Level level = student != null ? student.level() : q.level() != null ? q.level() : c.analysis().summary().low() > 0 ? Level.LOW : Level.MEDIUM;
-            if (level == Level.NO_DATA) level = Level.MEDIUM;
-            String topic = q.subject() != null ? q.subject().name() : null;
-            String what = mode.equals("quiz") ? "un quiz de tres preguntas" : "un taller de práctica";
-            String who = student != null ? " para " + Grades.firstName(student.student().name()) : " " + levelPhrase(level);
-            ReplyAction open = workshop("Abrir talleres", mode, level, topic, student);
-            if (c.materials() == 0) return Optional.of(AssistantReply.say("create-activity", "Para crear " + what + " necesito el material de clase. Súbelo en Talleres y lo preparo.").andRun(open));
-            return Optional.of(AssistantReply.say("create-activity", "Voy a preparar " + what + (topic != null ? " sobre " + topic : "") + who + ". Revisa el material seleccionado y presiona crear.").andRun(open));
-        }
-    }
-
     static final class DraftMessage implements IntentHandler {
         public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
             if (!q.has("mensaje", "retroalimentacion", "correo", "escribele", "escribe", "redacta", "felicita", "feedback")) return Optional.empty();
