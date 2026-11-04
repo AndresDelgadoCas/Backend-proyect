@@ -109,3 +109,11 @@ Endpoints (todos protegidos por JWT y Row Level Security):
 - `PUT /api/courses/{id}/grading-scheme`: `{ "weights": [30, 30, 40], "passingGrade": 3.0 }` (tabla `course_grading_schemes`, migración V7).
 - `GET /api/courses/{id}/students/{studentId}/feedback?tone=cercano|formal`: mensaje de retroalimentación.
 - `POST /api/courses/{id}/assistant`: `{ "question": "¿Quién viene bajando?" }` → texto, estudiantes y acciones.
+
+## Pruebas
+
+```bash
+./mvnw test -Dtest='!FairteamBackendApplicationTests' -Dsurefire.failIfNoSpecifiedTests=false
+```
+
+Las pruebas unitarias no necesitan base de datos: el dominio y el servicio de `insights` se prueban con puertos en memoria, los controladores con MockMvc y los adaptadores JPA con Mockito. `FairteamBackendApplicationTests` levanta el contexto completo y requiere PostgreSQL. GitHub Actions corre las pruebas en cada push (`.github/workflows/ci.yml`).
