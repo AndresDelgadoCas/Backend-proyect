@@ -9,14 +9,14 @@ class SubjectExtremesHandlerTest {
 
     @Test
     void findsTheHardestAndEasiestSubject() {
-        assertThat(new Handlers.SubjectExtremes().handle(AssistantFixture.query("¿qué tema les cuesta más?", ctx), ctx).orElseThrow().text())
+        assertThat(new SubjectExtremesHandler().handle(AssistantFixture.query("¿qué tema les cuesta más?", ctx), ctx).orElseThrow().text())
                 .startsWith("El tema que más cuesta es Ciclos y condicionales");
-        assertThat(new Handlers.SubjectExtremes().handle(AssistantFixture.query("el tema más fácil", ctx), ctx).orElseThrow().text())
+        assertThat(new SubjectExtremesHandler().handle(AssistantFixture.query("el tema más fácil", ctx), ctx).orElseThrow().text())
                 .startsWith("El tema con mejor promedio es Funciones");
     }
 
     @Test
     void needsADirection() {
-        assertThat(new Handlers.SubjectExtremes().handle(AssistantFixture.query("tema", ctx), ctx)).isEmpty();
+        assertThat(new SubjectExtremesHandler().handle(AssistantFixture.query("tema", ctx), ctx)).isEmpty();
     }
 }
