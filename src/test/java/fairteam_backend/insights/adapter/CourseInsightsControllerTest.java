@@ -59,6 +59,13 @@ class CourseInsightsControllerTest {
     }
 
     @Test
+    void downloadsTheReportAsCsv() throws Exception {
+        mvc.perform(get("/api/courses/1/insights/report.csv"))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Content-Disposition", org.hamcrest.Matchers.containsString("seguimiento-curso-1.csv")));
+    }
+
+    @Test
     void unknownCoursesAreNotFound() throws Exception {
         mvc.perform(get("/api/courses/9/insights")).andExpect(status().isNotFound()).andExpect(jsonPath("$.message").exists());
     }
