@@ -9,7 +9,7 @@ class CourseCountsHandlerTest {
 
     @Test
     void summarizesHowManyStudentsAndGrades() {
-        AssistantReply reply = new Handlers.CourseCounts().handle(AssistantFixture.query("¿cuántos estudiantes hay?", ctx), ctx).orElseThrow();
+        AssistantReply reply = new CourseCountsHandler().handle(AssistantFixture.query("¿cuántos estudiantes hay?", ctx), ctx).orElseThrow();
         assertThat(reply.text()).startsWith("Programación I tiene 4 estudiantes y 12 notas cargadas").contains("1 sin notas");
     }
 }
