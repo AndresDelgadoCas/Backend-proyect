@@ -81,3 +81,29 @@ El proyecto todavía es mayoritariamente por capas; no es correcto describir tod
 ## Despliegue
 
 Render debe usar Java 21 y configurar secretos y datos de conexión desde variables de entorno. Las migraciones presuponen que las tablas base `students` y `subjects` ya existen. La V5 conserva los estudiantes y las notas existentes dentro de un curso inicial por docente. Flyway aplica estas migraciones al iniciar; conserva una copia de seguridad de producción antes del despliegue.
+
+## Módulo `insights`: el cerebro del asistente docente
+
+Arquitectura hexagonal dentro de `fairteam_backend.insights`:
+
+| Capa | Paquete | Contenido |
+|---|---|---|
+| Dominio (Java puro) | `insights.domain` | `CourseAnalyzer` (niveles, tendencias por corte, promedio por tema), `GradeProjector` y `GradingScheme` (nota necesaria para aprobar), `Briefing` (resumen hablado), `FeedbackTemplate` (mensajes), `assistant` (intérprete del Búho) |
+| Aplicación | `insights.application` | Puertos de entrada (`CourseInsightsUseCase`, `DraftFeedbackUseCase`, `AskAssistantUseCase`), puertos de salida (`CourseDataPort`, `GradingSchemePort`) y `CourseInsightsService` |
+| Adaptadores | `insights.adapter` | `CourseInsightsController` (REST) y adaptadores JPA sobre los repositorios existentes |
+| Composición | `insights.config` | `InsightsConfiguration` elige las implementaciones |
+
+Patrones de diseño aplicados:
+
+- **Strategy**: `RiskScoringStrategy` / `TrendWeightedRiskStrategy` calcula el riesgo 0–100 (promedio + tendencia).
+- **Chain of Responsibility**: `AssistantEngine` pasa la pregunta por `IntentHandler`s (resumen, quién baja, qué nota necesita, crear quiz, escribir mensaje…); agregar una habilidad es agregar una clase.
+- **Template Method + Factory Method**: `FeedbackTemplate.forTone()` crea `WarmFeedback` o `FormalFeedback`; la estructura del mensaje es fija y cada tono define saludo y despedida.
+- **Builder**: `Briefing` arma el resumen frase por frase, solo con lo que tiene algo que decir.
+- **Ports & Adapters**: el dominio y el servicio no importan Spring ni JPA; se prueban con puertos falsos (`CourseInsightsTest`).
+
+Endpoints (todos protegidos por JWT y Row Level Security):
+
+- `GET /api/courses/{id}/insights`: análisis, esquema de notas, proyecciones y resumen del día.
+- `PUT /api/courses/{id}/grading-scheme`: `{ "weights": [30, 30, 40], "passingGrade": 3.0 }` (tabla `course_grading_schemes`, migración V7).
+- `GET /api/courses/{id}/students/{studentId}/feedback?tone=cercano|formal`: mensaje de retroalimentación.
+- `POST /api/courses/{id}/assistant`: `{ "question": "¿Quién viene bajando?" }` → texto, estudiantes y acciones.

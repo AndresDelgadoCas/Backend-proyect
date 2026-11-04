@@ -27,4 +27,6 @@ public interface CourseMaterialRepository extends JpaRepository<CourseMaterial, 
     List<Metadata> findMetadataByCourseId(@Param("courseId") Long courseId);
 
     Optional<CourseMaterial> findByIdAndCourse_Id(Long id, Long courseId);
+
+    long countByCourse_Id(Long courseId);
 }
