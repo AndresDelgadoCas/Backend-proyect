@@ -110,6 +110,21 @@ Endpoints (todos protegidos por JWT y Row Level Security):
 - `GET /api/courses/{id}/students/{studentId}/feedback?tone=cercano|formal`: mensaje de retroalimentación.
 - `POST /api/courses/{id}/assistant`: `{ "question": "¿Quién viene bajando?" }` → texto, estudiantes y acciones.
 
+## Asistencia y acompañamiento
+
+- `GET|PUT /api/courses/{id}/attendance?date=AAAA-MM-DD`: marcas de la sesión (`PRESENT`, `ABSENT`, `LATE`, `EXCUSED`).
+  Un PUT con lista vacía borra la sesión; no se aceptan fechas futuras.
+- `GET /api/courses/{id}/attendance/sessions` y `/summary`: fechas registradas y porcentaje de asistencia por estudiante.
+  Quien asiste a menos del 80 % (con al menos 4 sesiones) queda marcado, y el Búho lo combina con las notas.
+- `GET|POST /api/courses/{id}/students/{sid}/interventions` y `DELETE .../{interventionId}`: registro de apoyos
+  (conversación, tutoría, taller, mensaje, familia, otro) con una nota breve.
+
+## Tipos de taller
+
+Las rutas de generación aceptan `activityStyles` (hasta tres de `GUIDED`, `CODE`, `APP`, `DEPLOY`, `CASE`, `TEAM`).
+El servicio de IA adapta las actividades: código con casos de prueba, aplicaciones con historias de usuario,
+despliegues con URL pública como evidencia, casos de estudio o proyectos por roles.
+
 ## Cursos de demostración
 
 `POST /api/demo/workspace` (con sesión) crea en la cuenta del docente cuatro cursos ficticios de tres semestres:
