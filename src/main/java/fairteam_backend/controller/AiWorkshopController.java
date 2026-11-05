@@ -30,7 +30,8 @@ public class AiWorkshopController {
             @RequestParam("targetLevel") String targetLevel,
             @RequestParam(value = "learningObjective", required = false) String learningObjective,
             @RequestParam(value = "learningContext", required = false) String learningContext,
-            @RequestParam(value = "generationType", required = false) String generationType) {
+            @RequestParam(value = "generationType", required = false) String generationType,
+            @RequestParam(value = "activityStyles", required = false) String activityStyles) {
 
         return ResponseEntity.ok(aiWorkshopService.generateWorkshop(
                 file,
@@ -38,6 +39,7 @@ public class AiWorkshopController {
                 targetLevel,
                 learningObjective,
                 learningContext,
-                generationType));
+                generationType,
+                activityStyles));
     }
 }

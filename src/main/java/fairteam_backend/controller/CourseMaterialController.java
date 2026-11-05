@@ -52,10 +52,11 @@ public class CourseMaterialController {
             @RequestParam String targetLevel,
             @RequestParam(required = false) String learningObjective,
             @RequestParam(required = false) String learningContext,
-            @RequestParam(required = false) String generationType) {
+            @RequestParam(required = false) String generationType,
+            @RequestParam(required = false) String activityStyles) {
         var material = service.findById(courseId, materialId);
         return aiWorkshopService.generateWorkshop(new StoredMaterialMultipartFile(material), subject, targetLevel,
-                learningObjective, learningContext, generationType);
+                learningObjective, learningContext, generationType, activityStyles);
     }
 
     @PostMapping(value = "/generate-workshop", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -66,7 +67,8 @@ public class CourseMaterialController {
             @RequestParam String targetLevel,
             @RequestParam(required = false) String learningObjective,
             @RequestParam(required = false) String learningContext,
-            @RequestParam(required = false) String generationType) {
+            @RequestParam(required = false) String generationType,
+            @RequestParam(required = false) String activityStyles) {
         if (materialIds == null || materialIds.isEmpty() || materialIds.size() > 6
                 || new HashSet<>(materialIds).size() != materialIds.size()) {
             throw new org.springframework.web.server.ResponseStatusException(
@@ -77,7 +79,7 @@ public class CourseMaterialController {
                 .map(file -> (MultipartFile) file)
                 .toList();
         return aiWorkshopService.generateWorkshop(files, subject, targetLevel,
-                learningObjective, learningContext, generationType);
+                learningObjective, learningContext, generationType, activityStyles);
     }
 
     @DeleteMapping("/{materialId}")
