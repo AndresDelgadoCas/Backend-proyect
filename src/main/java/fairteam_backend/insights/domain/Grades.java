@@ -31,4 +31,18 @@ public final class Grades {
         if (fullName == null || fullName.isBlank()) return "";
         return fullName.trim().split("\\s+")[0];
     }
+
+    private static final java.util.Set<String> TITLES = java.util.Set.of(
+            "prof", "profe", "profesor", "profesora", "dr", "dra", "doctor", "doctora",
+            "ing", "ingeniero", "ingeniera", "mg", "msc", "lic", "phd", "sr", "sra");
+
+    /** First name of a teacher, skipping titles such as "Prof." or "Dra.": "Prof. Carolina Méndez" → "Carolina". */
+    public static String teacherFirstName(String fullName) {
+        if (fullName == null || fullName.isBlank()) return "";
+        for (String word : fullName.trim().split("\\s+")) {
+            String bare = word.replaceAll("[.,]+$", "");
+            if (!bare.isEmpty() && !TITLES.contains(bare.toLowerCase(java.util.Locale.ROOT))) return bare;
+        }
+        return "";
+    }
 }

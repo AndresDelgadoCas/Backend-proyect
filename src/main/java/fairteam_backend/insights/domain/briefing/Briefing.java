@@ -24,7 +24,11 @@ public final class Briefing {
         return hour < 12 ? "Buenos días" : hour < 19 ? "Buenas tardes" : "Buenas noches";
     }
 
-    public Briefing greet(String teacher, LocalTime now) { sentences.add(greeting(now) + ", " + Grades.firstName(teacher) + "."); return this; }
+    public Briefing greet(String teacher, LocalTime now) {
+        String name = Grades.teacherFirstName(teacher);
+        sentences.add(greeting(now) + (name.isEmpty() ? "." : ", " + name + "."));
+        return this;
+    }
 
     public Briefing state(CourseAnalysis a) {
         CourseSummary s = a.summary();

@@ -9,7 +9,7 @@ final class SmallTalkHandler implements IntentHandler {
     @Override
     public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
         String t = q.text();
-        if (t.matches("(hola|hey|buenas|que tal)( buho)?")) return Optional.of(AssistantReply.say("small-talk", "¡Hola, " + Grades.firstName(c.teacher()) + "! ¿Quieres que te cuente cómo va " + c.analysis().courseName() + "?")
+        if (t.matches("(hola|hey|buenas|que tal)( buho)?")) return Optional.of(AssistantReply.say("small-talk", "¡Hola" + (Grades.teacherFirstName(c.teacher()).isEmpty() ? "" : ", " + Grades.teacherFirstName(c.teacher())) + "! ¿Quieres que te cuente cómo va " + c.analysis().courseName() + "?")
                 .withActions(ReplyAction.of("briefing", "Escuchar el resumen")));
         if (q.has("gracias", "muchas gracias", "te agradezco")) return Optional.of(AssistantReply.say("small-talk", "Con gusto. Aquí estoy cuando me necesites."));
         return Optional.empty();

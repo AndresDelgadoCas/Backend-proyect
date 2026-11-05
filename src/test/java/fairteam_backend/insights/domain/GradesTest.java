@@ -29,4 +29,14 @@ class GradesTest {
         assertThat(Grades.firstName("  Ana María Torres ")).isEqualTo("Ana");
         assertThat(Grades.firstName(null)).isEmpty();
     }
+
+    @Test
+    void teacherNamesSkipTitles() {
+        assertThat(Grades.teacherFirstName("Prof. Carolina Méndez")).isEqualTo("Carolina");
+        assertThat(Grades.teacherFirstName("Dra. Ana Ruiz")).isEqualTo("Ana");
+        assertThat(Grades.teacherFirstName("ing jorge")).isEqualTo("jorge");
+        assertThat(Grades.teacherFirstName("Andrés")).isEqualTo("Andrés");
+        assertThat(Grades.teacherFirstName("Prof.")).isEmpty();
+        assertThat(Grades.teacherFirstName(null)).isEmpty();
+    }
 }
