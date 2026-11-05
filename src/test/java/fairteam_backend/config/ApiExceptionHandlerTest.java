@@ -30,6 +30,9 @@ class ApiExceptionHandlerTest {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
 
+        @GetMapping("/typed")
+        String typed(@org.springframework.web.bind.annotation.RequestParam java.time.LocalDate date) { return "ok"; }
+
         @GetMapping("/upload")
         String upload() {
             throw new MaxUploadSizeExceededException(10);
@@ -66,5 +69,15 @@ class ApiExceptionHandlerTest {
         mvc.perform(get("/upload"))
                 .andExpect(status().isPayloadTooLarge())
                 .andExpect(jsonPath("$.message", not(emptyString())));
+    }
+
+    @Test
+    void badParametersGetAReadableMessage() throws Exception {
+        mvc.perform(get("/typed").param("date", "ayer"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("El valor de \"date\" no es válido. Usa el formato AAAA-MM-DD."));
+        mvc.perform(get("/typed"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Falta el dato \"date\"."));
     }
 }

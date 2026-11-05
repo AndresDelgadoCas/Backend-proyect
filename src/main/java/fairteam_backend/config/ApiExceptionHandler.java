@@ -40,6 +40,22 @@ public class ApiExceptionHandler {
         return body(HttpStatus.PAYLOAD_TOO_LARGE, "El archivo supera el límite de 10 MB.");
     }
 
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, Object>> handleUnreadable(Exception ex) {
+        return body(HttpStatus.BAD_REQUEST, "Revisa los datos enviados: hay un valor con un formato que no se reconoce.");
+    }
+
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, Object>> handleMismatch(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException ex) {
+        String hint = "date".equals(ex.getName()) ? " Usa el formato AAAA-MM-DD." : "";
+        return body(HttpStatus.BAD_REQUEST, "El valor de \"" + ex.getName() + "\" no es válido." + hint);
+    }
+
+    @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
+    public ResponseEntity<Map<String, Object>> handleMissing(org.springframework.web.bind.MissingServletRequestParameterException ex) {
+        return body(HttpStatus.BAD_REQUEST, "Falta el dato \"" + ex.getParameterName() + "\".");
+    }
+
     static ResponseEntity<Map<String, Object>> body(HttpStatusCode status, String reason) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", Instant.now().toString());
