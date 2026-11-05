@@ -30,7 +30,13 @@ public class AiWorkshopService {
             String learningObjective,
             String learningContext,
             String generationType) {
-        return generateWorkshop(List.of(file), subject, targetLevel, learningObjective, learningContext, generationType);
+        return generateWorkshop(List.of(file), subject, targetLevel, learningObjective, learningContext, generationType, null);
+    }
+
+    public WorkshopGenerationResponseDTO generateWorkshop(
+            MultipartFile file, String subject, String targetLevel, String learningObjective,
+            String learningContext, String generationType, String activityStyles) {
+        return generateWorkshop(List.of(file), subject, targetLevel, learningObjective, learningContext, generationType, activityStyles);
     }
 
     public WorkshopGenerationResponseDTO generateWorkshop(
@@ -39,15 +45,32 @@ public class AiWorkshopService {
             String targetLevel,
             String learningObjective,
             String learningContext,
-            String generationType) {
+            String generationType,
+            String activityStyles) {
         validate(files, subject, targetLevel, learningObjective, learningContext, generationType);
+        String styles = normalizeStyles(activityStyles);
         return aiWorkshopPort.generate(
                 files,
                 subject.trim(),
                 normalizeLevel(targetLevel),
                 learningObjective == null ? "" : learningObjective.trim(),
                 learningContext == null ? "" : learningContext.trim(),
-                generationType == null ? "WORKSHOP" : generationType.trim().toUpperCase(Locale.ROOT));
+                generationType == null ? "WORKSHOP" : generationType.trim().toUpperCase(Locale.ROOT),
+                styles);
+    }
+
+    /** Kinds of work the AI service understands; it validates them again, this keeps bad input out early. */
+    static final java.util.Set<String> ACTIVITY_STYLES = java.util.Set.of("GUIDED", "CODE", "APP", "DEPLOY", "CASE", "TEAM");
+
+    static String normalizeStyles(String raw) {
+        if (raw == null || raw.isBlank()) return "";
+        List<String> styles = java.util.Arrays.stream(raw.split(",")).map(s -> s.trim().toUpperCase(Locale.ROOT))
+                .filter(s -> !s.isEmpty()).distinct().toList();
+        if (!ACTIVITY_STYLES.containsAll(styles)) {
+            throw new ResponseStatusException(BAD_REQUEST, "Tipo de actividad no reconocido.");
+        }
+        if (styles.size() > 3) throw new ResponseStatusException(BAD_REQUEST, "Elige hasta 3 tipos de actividad.");
+        return String.join(",", styles);
     }
 
     private void validate(
