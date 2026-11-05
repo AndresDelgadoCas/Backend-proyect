@@ -102,7 +102,10 @@ public class TeacherAuthService {
         }
         Boolean hasCourse = jdbcTemplate.queryForObject(
                 "SELECT EXISTS (SELECT 1 FROM courses WHERE teacher_id = ?)", Boolean.class, teacherId);
-        if (!Boolean.TRUE.equals(hasCourse)) {
+        Boolean hasLooseStudents = jdbcTemplate.queryForObject(
+                "SELECT EXISTS (SELECT 1 FROM students WHERE teacher_id = ? AND course_id IS NULL)", Boolean.class, teacherId);
+        // Only legacy rosters without a course need the "Curso importado" container; a new teacher starts clean.
+        if (!Boolean.TRUE.equals(hasCourse) && Boolean.TRUE.equals(hasLooseStudents)) {
             jdbcTemplate.update("INSERT INTO courses(teacher_id, name, description) VALUES (?, ?, ?)",
                     teacherId, "Curso importado", "Datos existentes antes de organizar por cursos.");
         }
