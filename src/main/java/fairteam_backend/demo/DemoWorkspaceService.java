@@ -37,6 +37,8 @@ public class DemoWorkspaceService {
         int students = 0;
         int grades = 0;
         int materials = 0;
+        int attendance = 0;
+        int interventions = 0;
 
         for (int c = 0; c < DemoCatalog.COURSES.size(); c++) {
             DemoCourse course = DemoCatalog.COURSES.get(c);
@@ -80,6 +82,13 @@ public class DemoWorkspaceService {
                         withStudent);
                 students++;
                 grades += withStudent.size();
+                attendance += recordAttendance(course, c, courseId, studentId, s, student.profile());
+                if (course.inProgress() && "LOW".equals(level)) {
+                    jdbc.update("INSERT INTO student_interventions (course_id, student_id, kind, note, created_at) "
+                            + "VALUES (?, ?, 'CONVERSATION', ?, now() - interval '6 days')", courseId, studentId,
+                            "Hablamos al final de clase sobre el corte 1. Se comprometió a asistir a la tutoría del jueves.");
+                    interventions++;
+                }
             }
 
             for (String file : course.materials()) {
@@ -90,7 +99,7 @@ public class DemoWorkspaceService {
             }
             created.add(course.name());
         }
-        return new DemoSummary(created, skipped, students, grades, materials);
+        return new DemoSummary(created, skipped, students, grades, materials, attendance, interventions);
     }
 
     private Map<String, Long> ensureSubjects(List<String> names) {
@@ -113,5 +122,21 @@ public class DemoWorkspaceService {
     }
 
     public record DemoSummary(List<String> createdCourses, List<String> skippedCourses,
-                              int students, int grades, int materials) { }
+                              int students, int grades, int materials, int attendance, int interventions) { }
+
+    /** Two sessions a week (Tuesday and Thursday), ending at the course's last week. */
+    private int recordAttendance(DemoCourse course, int courseIndex, long courseId, long studentId, int index, DemoProfile profile) {
+        int sessions = DemoGradeGenerator.sessions(course);
+        // Ends before today so the teacher can take today's roll in the demo.
+        java.time.LocalDate last = java.time.LocalDate.now().minusDays(DemoCatalog.ageInDays(courseIndex) + 1L)
+                .with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.THURSDAY));
+        List<Object[]> rows = new ArrayList<>();
+        for (int k = 0; k < sessions; k++) {
+            java.time.LocalDate date = last.minusWeeks(k / 2).minusDays(k % 2 == 0 ? 0 : 2);
+            rows.add(new Object[] {courseId, studentId, java.sql.Date.valueOf(date),
+                    DemoGradeGenerator.attendance(course, index, profile, sessions - k)});
+        }
+        jdbc.batchUpdate("INSERT INTO attendance_records (course_id, student_id, session_date, status) VALUES (?, ?, ?, ?)", rows);
+        return rows.size();
+    }
 }

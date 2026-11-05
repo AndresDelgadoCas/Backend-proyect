@@ -48,4 +48,22 @@ class DemoGradeGeneratorTest {
         }
         return sum / 60;
     }
+
+    @Test
+    void strugglingStudentsMissMoreClassesThanStrongOnes() {
+        assertThat(absences(DemoProfile.STRUGGLING)).isGreaterThan(absences(DemoProfile.STRONG) * 3);
+    }
+
+    @Test
+    void runningCoursesHaveFewerSessions() {
+        assertThat(DemoGradeGenerator.sessions(running)).isLessThan(DemoGradeGenerator.sessions(finished));
+    }
+
+    private long absences(DemoProfile profile) {
+        long count = 0;
+        for (int s = 0; s < 40; s++) {
+            for (int k = 1; k <= 16; k++) if ("ABSENT".equals(DemoGradeGenerator.attendance(finished, s, profile, k))) count++;
+        }
+        return count;
+    }
 }
