@@ -56,4 +56,11 @@ class DemoCatalogTest {
     void topicsAreDifferentPerCourse() {
         assertThat(DemoCatalog.COURSES).flatExtracting(DemoCourse::topics).doesNotHaveDuplicates().hasSize(12);
     }
+
+    @Test
+    void currentCourseIsTheNewest() {
+        int newest = IntStream.range(0, DemoCatalog.COURSES.size()).boxed()
+                .min(java.util.Comparator.comparingInt(DemoCatalog::ageInDays)).orElseThrow();
+        assertThat(DemoCatalog.COURSES.get(newest).name()).startsWith("Patrones de Diseño");
+    }
 }

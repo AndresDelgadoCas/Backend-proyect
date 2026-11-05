@@ -48,6 +48,11 @@ public final class DemoCatalog {
 
     private DemoCatalog() { }
 
+    /** Days since each course was created: past semesters first, the current Patrones de Diseño newest. */
+    private static final int[] AGE_IN_DAYS = {300, 150, 0, 1};
+
+    public static int ageInDays(int courseIndex) { return AGE_IN_DAYS[courseIndex]; }
+
     /** Students of a course; indexes continue across courses so every course has different people. */
     public static List<DemoStudent> studentsOf(int courseIndex) {
         int offset = 0;

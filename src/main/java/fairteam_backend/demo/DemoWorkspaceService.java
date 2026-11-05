@@ -46,9 +46,11 @@ public class DemoWorkspaceService {
                 skipped.add(course.name());
                 continue;
             }
+            // Older semesters get older dates, so the current course is listed (and opened) first.
             Long courseId = jdbc.queryForObject(
-                    "INSERT INTO courses (name, period, description) VALUES (?, ?, ?) RETURNING id",
-                    Long.class, course.name(), course.period(), course.description());
+                    "INSERT INTO courses (name, period, description, created_at) "
+                            + "VALUES (?, ?, ?, now() - make_interval(days => ?)) RETURNING id",
+                    Long.class, course.name(), course.period(), course.description(), DemoCatalog.ageInDays(c));
             jdbc.update("INSERT INTO course_grading_schemes (course_id, weights, passing_grade) VALUES (?, ?, 3.0)",
                     courseId, course.weights().stream().map(String::valueOf).collect(Collectors.joining(",")));
 
