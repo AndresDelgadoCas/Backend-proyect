@@ -110,6 +110,20 @@ Endpoints (todos protegidos por JWT y Row Level Security):
 - `GET /api/courses/{id}/students/{studentId}/feedback?tone=cercano|formal`: mensaje de retroalimentación.
 - `POST /api/courses/{id}/assistant`: `{ "question": "¿Quién viene bajando?" }` → texto, estudiantes y acciones.
 
+## Cursos de demostración
+
+`POST /api/demo/workspace` (con sesión) crea en la cuenta del docente cuatro cursos ficticios de tres semestres:
+Programación Orientada a Objetos (2025-2), Estructuras de Datos (2026-1), Patrones de Diseño y Bases de Datos I
+(2026-2, todavía en curso). Cada uno trae estudiantes distintos (92 en total), notas por tema y corte con perfiles
+variados (buen progreso, estable, mejorando, bajando y en riesgo), su esquema de cortes y dos PDF de material de clase
+redactados a partir de fuentes abiertas citadas en cada documento. Volver a llamarlo no duplica nada. En la interfaz
+está como "Cargar cursos de demostración" en Inicio, Mis cursos y Ajustes.
+
+## Base de datos nueva
+
+El callback de Flyway `db/migration/beforeMigrate.sql` crea las tablas académicas originales cuando la base está vacía
+y no hace nada en una base existente. Así el backend arranca tanto en la base anterior como en una base nueva de Render.
+
 ## Pruebas
 
 ```bash
