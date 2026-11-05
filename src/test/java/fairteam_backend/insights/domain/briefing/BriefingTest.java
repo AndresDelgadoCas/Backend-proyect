@@ -37,4 +37,18 @@ class BriefingTest {
         String text = Briefing.builder().state(fine).support(fine).subject(fine).trend(fine).nextStep(fine, 1).build();
         assertThat(text).contains("Nadie está por debajo de tres.").contains("proponer un reto").doesNotContain("Ojo");
     }
+
+    @Test
+    void mentionsFrequentAbsencesOnlyWhenThereAreAny() {
+        var stats = java.util.Map.of(
+                1L, new fairteam_backend.insights.domain.attendance.AttendanceStats(1, 10, 6, 4, 0, 0),
+                2L, new fairteam_backend.insights.domain.attendance.AttendanceStats(2, 10, 10, 0, 0, 0));
+        assertThat(Briefing.builder().attendance(stats).build()).isEqualTo("En asistencia, 1 estudiante falta a más del 20 % de las clases.");
+        assertThat(Briefing.builder().attendance(java.util.Map.of()).build()).isEmpty();
+    }
+
+    @Test
+    void greetsWithoutTitles() {
+        assertThat(Briefing.builder().greet("Prof. Carolina Méndez", LocalTime.of(9, 0)).build()).isEqualTo("Buenos días, Carolina.");
+    }
 }

@@ -13,6 +13,7 @@ import fairteam_backend.insights.application.port.in.AskAssistantUseCase;
 import fairteam_backend.insights.application.port.in.CourseInsightsUseCase;
 import fairteam_backend.insights.application.port.in.DraftFeedbackUseCase;
 import fairteam_backend.insights.application.port.in.TeacherOverviewUseCase;
+import fairteam_backend.insights.application.port.out.AttendancePort;
 import fairteam_backend.insights.application.port.out.CourseDataPort;
 import fairteam_backend.insights.application.port.out.CourseDataPort.CourseData;
 import fairteam_backend.insights.application.port.out.GradingSchemePort;
@@ -21,6 +22,7 @@ import fairteam_backend.insights.domain.CourseAnalyzer;
 import fairteam_backend.insights.domain.CourseCsvReport;
 import fairteam_backend.insights.domain.StudentPerformance;
 import fairteam_backend.insights.domain.assistant.AssistantContext;
+import fairteam_backend.insights.domain.attendance.AttendanceStats;
 import fairteam_backend.insights.domain.assistant.AssistantEngine;
 import fairteam_backend.insights.domain.assistant.AssistantReply;
 import fairteam_backend.insights.domain.briefing.Briefing;
@@ -41,9 +43,16 @@ public class CourseInsightsService implements CourseInsightsUseCase, DraftFeedba
     private final GradeProjector projector;
     private final AssistantEngine assistant;
     private final Clock clock;
+    private final AttendancePort attendance;
 
     public CourseInsightsService(CourseDataPort courseData, GradingSchemePort schemes, CourseAnalyzer analyzer,
             GradeProjector projector, AssistantEngine assistant, Clock clock) {
+        this(courseData, schemes, analyzer, projector, assistant, clock, AttendancePort.none());
+    }
+
+    public CourseInsightsService(CourseDataPort courseData, GradingSchemePort schemes, CourseAnalyzer analyzer,
+            GradeProjector projector, AssistantEngine assistant, Clock clock, AttendancePort attendance) {
+        this.attendance = attendance;
         this.courseData = courseData;
         this.schemes = schemes;
         this.analyzer = analyzer;
@@ -52,7 +61,8 @@ public class CourseInsightsService implements CourseInsightsUseCase, DraftFeedba
         this.clock = clock;
     }
 
-    private record Reading(CourseData data, CourseAnalysis analysis, SchemeView scheme, Map<Long, GradeProjection> projections) { }
+    private record Reading(CourseData data, CourseAnalysis analysis, SchemeView scheme, Map<Long, GradeProjection> projections,
+            Map<Long, AttendanceStats> attendance) { }
 
     private Reading read(long courseId) {
         CourseData data = courseData.load(courseId).orElseThrow(() -> new CourseNotFoundException(courseId));
@@ -65,12 +75,12 @@ public class CourseInsightsService implements CourseInsightsUseCase, DraftFeedba
         Map<Long, GradeProjection> projections = new LinkedHashMap<>();
         for (StudentPerformance p : analysis.students()) projections.put(p.student().id(), projector.project(p, analysis.periods(), scheme));
         SchemeView view = new SchemeView(scheme.weights(), scheme.passingGrade(), List.copyOf(periods), analysis.periods(), stored.isPresent());
-        return new Reading(data, analysis, view, projections);
+        return new Reading(data, analysis, view, projections, attendance.statsFor(courseId));
     }
 
     private String briefing(Reading r, String teacher) {
         return Briefing.builder().greet(teacher, LocalTime.now(clock)).state(r.analysis()).support(r.analysis())
-                .subject(r.analysis()).trend(r.analysis()).nextStep(r.analysis(), r.data().materials()).build();
+                .subject(r.analysis()).trend(r.analysis()).attendance(r.attendance()).nextStep(r.analysis(), r.data().materials()).build();
     }
 
     @Override
@@ -104,7 +114,7 @@ public class CourseInsightsService implements CourseInsightsUseCase, DraftFeedba
     public AssistantReply ask(long courseId, String question, String teacherName) {
         Reading r = read(courseId);
         AssistantContext context = new AssistantContext(teacherName, r.analysis(), r.projections(), r.data().materials(),
-                courseData.courses(), briefing(r, teacherName));
+                courseData.courses(), briefing(r, teacherName), r.attendance());
         return assistant.answer(question, context);
     }
 

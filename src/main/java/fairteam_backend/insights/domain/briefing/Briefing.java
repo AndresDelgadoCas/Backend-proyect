@@ -62,6 +62,12 @@ public final class Briefing {
         return this;
     }
 
+    public Briefing attendance(java.util.Map<Long, fairteam_backend.insights.domain.attendance.AttendanceStats> stats) {
+        long alerts = stats.values().stream().filter(fairteam_backend.insights.domain.attendance.AttendanceStats::alert).count();
+        if (alerts > 0) sentences.add("En asistencia, " + Grades.plural(alerts, "estudiante falta", "estudiantes faltan") + " a más del 20 % de las clases.");
+        return this;
+    }
+
     public Briefing nextStep(CourseAnalysis a, int materials) {
         CourseSummary s = a.summary();
         if (s.gradeCount() == 0) return this;
