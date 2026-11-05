@@ -34,8 +34,9 @@ final class MissingGradesHandler implements IntentHandler {
             for (SubjectAverage subject : c.analysis().subjects()) {
                 int have = p.subjects().stream().filter(s -> s.subjectId() == subject.subjectId()).mapToInt(SubjectAverage::count).sum();
                 if (have < periods) {
-                    items.add(new ReplyItem(p.student().id(), p.student().name(), subject.name(),
-                            Grades.plural(periods - have, "nota pendiente", "notas pendientes"), "medium"));
+                    // Short value, topic in the note: long topic names would hide the student's name.
+                    items.add(new ReplyItem(p.student().id(), p.student().name(), String.valueOf(periods - have),
+                            "pendiente en " + subject.name(), "medium"));
                 }
             }
         }

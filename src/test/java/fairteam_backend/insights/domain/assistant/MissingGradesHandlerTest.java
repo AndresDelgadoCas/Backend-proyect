@@ -43,6 +43,7 @@ class MissingGradesHandlerTest {
         AssistantContext c = new AssistantContext("Ana", analysis, Map.of(), 0, List.of(new CourseRef(10, "Programación I")), "");
         AssistantReply reply = new MissingGradesHandler().handle(AssistantFixture.query("¿faltan notas?", c), c).orElseThrow();
         assertThat(reply.text()).startsWith("1 nota está pendiente.");
-        assertThat(reply.items()).extracting(ReplyItem::name, ReplyItem::value).containsExactly(org.assertj.core.groups.Tuple.tuple("Luis Mora", "Funciones"));
+        assertThat(reply.items()).extracting(ReplyItem::name, ReplyItem::value, ReplyItem::note)
+                .containsExactly(org.assertj.core.groups.Tuple.tuple("Luis Mora", "1", "pendiente en Funciones"));
     }
 }
