@@ -56,6 +56,10 @@ public class TenantIsolationFilter extends OncePerRequestFilter {
                     status.setRollbackOnly();
                     throw new FilterExecutionException(exception);
                 }
+                // A failed request must not commit, and an inner @Transactional that threw has already
+                // marked the transaction rollback-only: rolling back here avoids an UnexpectedRollbackException
+                // that would write a second error body after the real one.
+                if (response.getStatus() >= 400) status.setRollbackOnly();
             });
         } catch (FilterExecutionException exception) {
             if (exception.getCause() instanceof IOException ioException) throw ioException;
