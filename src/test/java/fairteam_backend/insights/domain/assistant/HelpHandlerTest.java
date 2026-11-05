@@ -17,4 +17,11 @@ class HelpHandlerTest {
     void ignoresUnrelatedQuestions() {
         assertThat(new HelpHandler().handle(AssistantFixture.query("zzz", ctx), ctx)).isEmpty();
     }
+
+    @Test
+    void questionsAboutStudentsAreNotHelpRequests() {
+        assertThat(new HelpHandler().handle(AssistantFixture.query("¿quién necesita ayuda?", ctx), ctx)).isEmpty();
+        assertThat(AssistantEngine.standard().answer("¿quién necesita ayuda?", ctx).intent())
+                .isEqualTo("who-needs-help");
+    }
 }
