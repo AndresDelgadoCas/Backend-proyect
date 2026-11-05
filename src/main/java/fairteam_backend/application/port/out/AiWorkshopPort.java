@@ -14,5 +14,6 @@ public interface AiWorkshopPort {
             String targetLevel,
             String learningObjective,
             String learningContext,
-            String generationType);
+            String generationType,
+            String activityStyles);
 }

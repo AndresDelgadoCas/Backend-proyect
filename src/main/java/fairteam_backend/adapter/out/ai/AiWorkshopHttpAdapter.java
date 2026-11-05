@@ -53,7 +53,8 @@ public class AiWorkshopHttpAdapter implements AiWorkshopPort {
             String targetLevel,
             String learningObjective,
             String learningContext,
-            String generationType) {
+            String generationType,
+            String activityStyles) {
         if (aiServiceToken == null || aiServiceToken.isBlank()) {
             throw new ResponseStatusException(
                     SERVICE_UNAVAILABLE,
@@ -79,6 +80,7 @@ public class AiWorkshopHttpAdapter implements AiWorkshopPort {
             form.add("learningObjective", learningObjective);
             form.add("learningContext", learningContext);
             form.add("generationType", generationType);
+            form.add("activityStyles", activityStyles == null ? "" : activityStyles);
 
             WorkshopGenerationResponseDTO response = aiRestClient.post()
                     .uri(generateWorkshopPath)
