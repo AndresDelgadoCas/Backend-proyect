@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import fairteam_backend.gradebook.GradeSheetRules;
 import fairteam_backend.entity.Course;
 import fairteam_backend.entity.Grade;
 import fairteam_backend.entity.Student;
@@ -58,13 +59,14 @@ public class CourseGradeImportService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "El CSV debe incluir grade, period, studentEmail (o studentId/studentName) y subject (o subjectId).");
             }
+            BigDecimal max = course.getMaxGrade() == null ? BigDecimal.valueOf(5) : course.getMaxGrade();
             List<Grade> imported = new ArrayList<>();
             int row = 1;
             for (CSVRecord record : parser) {
                 row++;
                 Student student = findStudent(record, course, row);
                 Subject subject = findSubject(record, row);
-                BigDecimal value = parseGrade(record, row);
+                BigDecimal value = parseGrade(record, row, max);
                 String period = field(record, "period");
                 if (period.isBlank() || period.length() > 20) {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El periodo no es válido en la fila " + row + ".");
@@ -133,13 +135,15 @@ public class CourseGradeImportService {
                 "No existe la materia de la fila " + number + "."));
     }
 
-    private static BigDecimal parseGrade(CSVRecord row, int number) {
+    /** The CSV is written in the course scale (0–5, 0–10, 0–100…); the stored value is always on 0–5. */
+    private static BigDecimal parseGrade(CSVRecord row, int number, BigDecimal max) {
         try {
             BigDecimal grade = new BigDecimal(field(row, "grade").replace(',', '.'));
-            if (grade.compareTo(BigDecimal.ZERO) < 0 || grade.compareTo(BigDecimal.valueOf(5)) > 0) throw new NumberFormatException();
-            return grade.setScale(2, java.math.RoundingMode.HALF_UP);
+            if (grade.compareTo(BigDecimal.ZERO) < 0 || grade.compareTo(max) > 0) throw new NumberFormatException();
+            return GradeSheetRules.toStored(grade.setScale(2, java.math.RoundingMode.HALF_UP), max);
         } catch (NumberFormatException | ArithmeticException error) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La nota de la fila " + number + " debe estar entre 0 y 5.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "La nota de la fila " + number + " debe estar entre 0 y " + GradeSheetRules.plain(max) + ".");
         }
     }
 
