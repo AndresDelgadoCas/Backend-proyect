@@ -24,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import fairteam_backend.application.port.out.AiWorkshopPort;
 import fairteam_backend.dto.WorkshopGenerationResponseDTO;
+import fairteam_backend.dto.WorkshopRequestDTO;
 
 import static org.springframework.http.HttpStatus.BAD_GATEWAY;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -47,14 +48,7 @@ public class AiWorkshopHttpAdapter implements AiWorkshopPort {
     }
 
     @Override
-    public WorkshopGenerationResponseDTO generate(
-            List<MultipartFile> files,
-            String subject,
-            String targetLevel,
-            String learningObjective,
-            String learningContext,
-            String generationType,
-            String activityStyles) {
+    public WorkshopGenerationResponseDTO generate(List<MultipartFile> files, WorkshopRequestDTO request) {
         if (aiServiceToken == null || aiServiceToken.isBlank()) {
             throw new ResponseStatusException(
                     SERVICE_UNAVAILABLE,
@@ -75,12 +69,13 @@ public class AiWorkshopHttpAdapter implements AiWorkshopPort {
                 };
                 form.add("files", new HttpEntity<>(fileResource, fileHeaders));
             }
-            form.add("subject", subject);
-            form.add("targetLevel", targetLevel);
-            form.add("learningObjective", learningObjective);
-            form.add("learningContext", learningContext);
-            form.add("generationType", generationType);
-            form.add("activityStyles", activityStyles == null ? "" : activityStyles);
+            form.add("subject", request.subject());
+            form.add("targetLevel", request.targetLevel());
+            form.add("learningObjective", request.learningObjective());
+            form.add("learningContext", request.learningContext());
+            form.add("generationType", request.generationType());
+            form.add("activityStyles", request.activityStyles() == null ? "" : request.activityStyles());
+            form.add("teacherPrompt", request.teacherPrompt() == null ? "" : request.teacherPrompt());
 
             WorkshopGenerationResponseDTO response = aiRestClient.post()
                     .uri(generateWorkshopPath)
