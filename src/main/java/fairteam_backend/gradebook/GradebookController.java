@@ -1,8 +1,10 @@
 package fairteam_backend.gradebook;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,7 +26,13 @@ public class GradebookController {
         this.roster = roster;
     }
 
-    public record SaveRequest(String period, List<GradeSheet.Change> changes) { }
+    public record SaveRequest(String period, List<GradeSheet.Change> changes, List<GradeSheet.ColumnSpec> columns) { }
+
+    public record RenameRequest(String name) { }
+
+    public record ScaleRequest(BigDecimal maxGrade) { }
+
+    public record ScaleView(BigDecimal maxGrade) { }
 
     public record QuickAdd(String text) { }
 
@@ -35,7 +43,23 @@ public class GradebookController {
 
     @PutMapping("/grade-sheet")
     public GradeSheet.SaveResult save(@PathVariable long courseId, @RequestBody SaveRequest body) {
-        return sheets.save(courseId, body.period(), body.changes());
+        return sheets.save(courseId, body.period(), body.changes(), body.columns());
+    }
+
+    @PutMapping("/grade-sheet/columns/{subjectId}")
+    public GradeSheet rename(@PathVariable long courseId, @PathVariable long subjectId, @RequestParam String period,
+            @RequestBody RenameRequest body) {
+        return sheets.renameColumn(courseId, period, subjectId, body.name());
+    }
+
+    @DeleteMapping("/grade-sheet/columns/{subjectId}")
+    public GradeSheet deleteColumn(@PathVariable long courseId, @PathVariable long subjectId, @RequestParam String period) {
+        return sheets.deleteColumn(courseId, period, subjectId);
+    }
+
+    @PutMapping("/grading-scale")
+    public ScaleView scale(@PathVariable long courseId, @RequestBody ScaleRequest body) {
+        return new ScaleView(sheets.updateScale(courseId, body.maxGrade()));
     }
 
     @PostMapping("/students/quick")
