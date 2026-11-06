@@ -121,13 +121,26 @@ Endpoints (todos protegidos por JWT y Row Level Security):
 
 ## Editor de notas y alta rápida
 
-- `GET /api/courses/{id}/grade-sheet?period=Corte 2`: el corte como tabla (estudiantes × temas). Sin `period`
-  abre el último corte con notas.
-- `PUT /api/courses/{id}/grade-sheet` con `{ period, changes: [{ studentId, subjectId, grade }] }`: guarda todo
-  en una transacción; `grade: null` borra la nota. Recalcula el nivel de los estudiantes tocados y avisa a los
-  observadores de notas.
+Cada curso tiene su escala (`courses.max_grade`: 5, 10, 20, 100…). Las notas se guardan siempre de 0 a 5 con
+cuatro decimales (87,5/100 se guarda como 4,375) y el editor, el asistente y las importaciones hablan en la
+escala del curso. La nota mínima para aprobar es la misma proporción en cualquier escala (3,0/5 = 60/100).
+
+- `GET /api/courses/{id}/grade-sheet?period=Corte 2`: el corte como tabla (estudiantes × columnas), con
+  `maxGrade`, `passingGrade`, el porcentaje de cada columna y el peso de cada corte (`periodWeights`). Sin
+  `period` abre el último corte. Un corte nuevo sin columnas propone las del corte anterior (`suggested: true`).
+- `PUT /api/courses/{id}/grade-sheet` con `{ period, changes: [{ studentId, subjectId, grade }], columns:
+  [{ subjectId, weight }] }`: guarda todo en una transacción; `grade: null` borra la nota. `columns` es opcional
+  y fija el orden y los porcentajes del corte: todos `null` (mismo peso) o todos con valor sumando 100 %.
+- `PUT /api/courses/{id}/grade-sheet/columns/{subjectId}?period=` con `{ name }`: renombra una columna del corte
+  (sus notas y su porcentaje pasan a la actividad con el nuevo nombre). `DELETE` la elimina con sus notas.
+- `PUT /api/courses/{id}/grading-scale` con `{ maxGrade }`: cambia la escala; las notas conservan su
+  proporción (un 4,0/5 pasa a verse como 80/100).
 - `POST /api/courses/{id}/students/quick` con `{ text }`: una línea por estudiante, con correo opcional
   separado por `;`, `,` o tabulación (como al copiar de Excel). Los repetidos se informan y no se crean.
+
+El promedio de un corte pondera las columnas calificadas con sus porcentajes (las pendientes no cuentan) y la
+definitiva pondera los cortes con el esquema del curso (`PUT /grading-scheme`), que también calcula cuánto
+necesita cada estudiante en lo que falta.
 
 ## Tipos de taller
 
