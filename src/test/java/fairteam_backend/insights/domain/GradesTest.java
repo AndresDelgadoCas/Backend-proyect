@@ -39,4 +39,17 @@ class GradesTest {
         assertThat(Grades.teacherFirstName("Prof.")).isEmpty();
         assertThat(Grades.teacherFirstName(null)).isEmpty();
     }
+
+    @Test
+    void writesGradesInTheCourseScale() throws Exception {
+        assertThat(Grades.format(3.45)).isEqualTo("3,5");
+        try (var scale = Grades.useScale(100)) {
+            assertThat(Grades.format(Grades.PASSING)).isEqualTo("60");
+            assertThat(Grades.format(4.375)).isEqualTo("87,5");
+        }
+        try (var scale = Grades.useScale(10)) {
+            assertThat(Grades.format(3.25)).isEqualTo("6,5");
+        }
+        assertThat(Grades.format(Grades.PASSING)).isEqualTo("3,0");
+    }
 }
