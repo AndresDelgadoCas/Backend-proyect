@@ -148,6 +148,12 @@ Las rutas de generación aceptan `activityStyles` (hasta tres de `GUIDED`, `CODE
 El servicio de IA adapta las actividades: código con casos de prueba, aplicaciones con historias de usuario,
 despliegues con URL pública como evidencia, casos de estudio o proyectos por roles.
 
+`teacherPrompt` (hasta 2000 caracteres) lleva las indicaciones del docente. Con `generationType=CUSTOM` el taller
+se arma a partir de ellas y el material es opcional: `POST /api/courses/{id}/materials/generate-workshop` sin
+`materialIds`. Los campos llegan como un `WorkshopRequestDTO` (Parameter Object) desde el controlador hasta el
+adaptador de IA. La respuesta trae además `studentIntro`, `teacherNotes` y, por actividad, `goal`, `hints` y
+`deliverable`.
+
 ## Cursos de demostración
 
 `POST /api/demo/workspace` (con sesión) crea en la cuenta del docente cuatro cursos ficticios de tres semestres:
