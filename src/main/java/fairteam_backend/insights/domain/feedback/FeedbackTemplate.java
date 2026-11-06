@@ -57,7 +57,7 @@ public abstract class FeedbackTemplate {
         SubjectAverage weakest = s.weakest();
         if (weakest != null) lines.add("El tema donde más te está costando es " + weakest.name() + " (" + Grades.format(weakest.average()) + ").");
         if (p != null && p.needed() != null && (p.status() == ProjectionStatus.POSSIBLE || p.status() == ProjectionStatus.HARD)) {
-            lines.add("Para llegar a 3,0 necesitas " + Grades.format(p.needed()) + " en lo que falta del semestre. "
+            lines.add("Para llegar a " + Grades.format(Grades.PASSING) + " necesitas " + Grades.format(p.needed()) + " en lo que falta del semestre. "
                     + (p.status() == ProjectionStatus.HARD ? "Es exigente, pero se puede si empezamos ya." : "Es totalmente alcanzable."));
         }
         lines.add("");

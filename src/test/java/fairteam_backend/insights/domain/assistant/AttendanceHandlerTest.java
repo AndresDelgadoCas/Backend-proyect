@@ -51,4 +51,13 @@ class AttendanceHandlerTest {
     void missingGradesStillWinForFaltanNotas() {
         assertThat(AssistantEngine.standard().answer("¿faltan notas?", base).intent()).isEqualTo("missing-grades");
     }
+
+    @Test
+    void writesThresholdsInTheCourseScale() throws Exception {
+        AssistantContext c = with(Map.of(1L, new AttendanceStats(1, 10, 6, 4, 0, 0)));
+        try (var scale = fairteam_backend.insights.domain.Grades.useScale(100)) {
+            assertThat(new AttendanceHandler().handle(AssistantFixture.query("asistencia", c), c).orElseThrow().text())
+                    .contains("por debajo de 60");
+        }
+    }
 }

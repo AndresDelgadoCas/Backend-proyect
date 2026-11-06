@@ -18,7 +18,7 @@ final class SubjectExtremesHandler implements IntentHandler {
         if ((!easiest && !hardest) || subjects.isEmpty()) return Optional.empty();
         SubjectAverage pick = easiest ? subjects.get(subjects.size() - 1) : subjects.get(0);
         String text = (easiest ? "El tema con mejor promedio es " : "El tema que más cuesta es ") + pick.name() + ", con " + Grades.format(pick.average())
-                + (pick.studentsBelowPassing() > 0 ? "; " + Grades.plural(pick.studentsBelowPassing(), "estudiante está", "estudiantes están") + " por debajo de 3,0." : ".");
+                + (pick.studentsBelowPassing() > 0 ? "; " + Grades.plural(pick.studentsBelowPassing(), "estudiante está", "estudiantes están") + " por debajo de " + Grades.format(Grades.PASSING) + "." : ".");
         AssistantReply reply = AssistantReply.say("subject-extremes", text);
         return Optional.of(easiest ? reply : reply.withActions(Handlers.workshop("Taller de " + pick.name(), "workshop", Level.LOW, pick.name(), null)));
     }

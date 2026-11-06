@@ -18,7 +18,7 @@ final class FallingBehindHandler implements IntentHandler {
                 .sorted(Comparator.comparingDouble(StudentPerformance::delta)).toList();
         if (down.isEmpty()) {
             boolean twoPeriods = c.analysis().periods().size() >= 2;
-            return Optional.of(AssistantReply.say("falling-behind", twoPeriods ? "Buenas noticias: nadie ha bajado más de 0,3 entre cortes." : "Necesito notas de al menos dos cortes para ver tendencias.").withActions(trends));
+            return Optional.of(AssistantReply.say("falling-behind", twoPeriods ? "Buenas noticias: nadie ha bajado más de " + Grades.format(0.3) + " entre cortes." : "Necesito notas de al menos dos cortes para ver tendencias.").withActions(trends));
         }
         return Optional.of(AssistantReply.say("falling-behind", Grades.plural(down.size(), "estudiante viene", "estudiantes vienen") + " bajando. " + Grades.firstName(down.get(0).student().name()) + " es quien más bajó.")
                 .withItems(down.stream().limit(6).map(p -> Handlers.item(p, "−" + Grades.format(Math.abs(p.delta())), Handlers.path(p))).toList()).withActions(trends));

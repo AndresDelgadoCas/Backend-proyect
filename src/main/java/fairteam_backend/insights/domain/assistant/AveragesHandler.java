@@ -16,7 +16,7 @@ final class AveragesHandler implements IntentHandler {
         SubjectAverage subject = q.subject();
         if (subject != null) {
             return Optional.of(AssistantReply.say("average", "En " + subject.name() + " el promedio es " + Grades.format(subject.average())
-                    + (subject.studentsBelowPassing() > 0 ? " y " + Grades.plural(subject.studentsBelowPassing(), "estudiante está", "estudiantes están") + " por debajo de 3,0" : "") + ".")
+                    + (subject.studentsBelowPassing() > 0 ? " y " + Grades.plural(subject.studentsBelowPassing(), "estudiante está", "estudiantes están") + " por debajo de " + Grades.format(Grades.PASSING) : "") + ".")
                     .withActions(Handlers.workshop("Taller de " + subject.name(), "workshop", Level.LOW, subject.name(), null)));
         }
         CourseSummary s = c.analysis().summary();

@@ -21,8 +21,8 @@ final class WhoNeedsHelpHandler implements IntentHandler {
                     .map(p -> p.subjects().stream().filter(x -> x.subjectId() == subject.subjectId()).findFirst().map(x -> new Hit(p, x.average())).orElse(null))
                     .filter(h -> h != null && Grades.round1(h.avg()) < Grades.PASSING).sorted(Comparator.comparingDouble(Hit::avg)).toList();
             String text = hits.isEmpty()
-                    ? "En " + subject.name() + " nadie está por debajo de 3,0. Promedio del tema: " + Grades.format(subject.average()) + "."
-                    : "En " + subject.name() + ", " + Grades.plural(hits.size(), "estudiante está", "estudiantes están") + " por debajo de 3,0. Promedio del tema: " + Grades.format(subject.average()) + ".";
+                    ? "En " + subject.name() + " nadie está por debajo de " + Grades.format(Grades.PASSING) + ". Promedio del tema: " + Grades.format(subject.average()) + "."
+                    : "En " + subject.name() + ", " + Grades.plural(hits.size(), "estudiante está", "estudiantes están") + " por debajo de " + Grades.format(Grades.PASSING) + ". Promedio del tema: " + Grades.format(subject.average()) + ".";
             AssistantReply reply = AssistantReply.say("who-needs-help", text)
                     .withItems(hits.stream().limit(8).map(h -> new ReplyItem(h.p().student().id(), h.p().student().name(), Grades.format(h.avg()), "promedio general " + Grades.format(h.p().average()), "low")).toList());
             return Optional.of(hits.isEmpty() ? reply : reply.withActions(Handlers.workshop("Taller de " + subject.name(), "workshop", Level.LOW, subject.name(), null)));

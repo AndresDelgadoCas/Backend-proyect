@@ -30,7 +30,7 @@ final class AttendanceHandler implements IntentHandler {
         }
         long withLowGrades = flagged.stream().filter(p -> p.hasGrades() && Grades.round1(p.average()) < Grades.PASSING).count();
         String text = Grades.plural(flagged.size(), "estudiante asiste", "estudiantes asisten") + " a menos del 80 % de las clases"
-                + (withLowGrades > 0 ? "; " + Grades.plural(withLowGrades, "de ellos también está", "de ellos también están") + " por debajo de 3,0. Empieza por ahí." : ".");
+                + (withLowGrades > 0 ? "; " + Grades.plural(withLowGrades, "de ellos también está", "de ellos también están") + " por debajo de " + Grades.format(Grades.PASSING) + ". Empieza por ahí." : ".");
         return Optional.of(AssistantReply.say("attendance", text)
                 .withItems(flagged.stream().limit(8).map(p -> {
                     AttendanceStats a = c.attendance().get(p.student().id());

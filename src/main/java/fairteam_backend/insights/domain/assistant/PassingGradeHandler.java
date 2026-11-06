@@ -24,11 +24,11 @@ final class PassingGradeHandler implements IntentHandler {
         List<GradeProjection> atRisk = c.projections().values().stream()
                 .filter(p -> p.status() == ProjectionStatus.HARD || p.status() == ProjectionStatus.IMPOSSIBLE)
                 .sorted(Comparator.comparing((GradeProjection p) -> p.needed() == null ? 9 : p.needed()).reversed()).toList();
-        if (atRisk.isEmpty()) return Optional.of(AssistantReply.say("passing-grade", "Con las notas actuales, todos pueden llegar a 3,0 sin necesitar más de 3,5 en lo que falta.").withActions(simulator));
+        if (atRisk.isEmpty()) return Optional.of(AssistantReply.say("passing-grade", "Con las notas actuales, todos pueden llegar a " + Grades.format(Grades.PASSING) + " sin necesitar más de " + Grades.format(3.5) + " en lo que falta.").withActions(simulator));
         List<ReplyItem> items = atRisk.stream().limit(6).map(p -> c.analysis().student(p.studentId())
                 .map(s -> new ReplyItem(p.studentId(), s.student().name(), p.needed() == null ? "—" : Grades.format(p.needed()), p.explanation(), "low")).orElse(null))
                 .filter(java.util.Objects::nonNull).toList();
-        return Optional.of(AssistantReply.say("passing-grade", Grades.plural(atRisk.size(), "estudiante está", "estudiantes están") + " en riesgo de perder: necesitan más de 3,5 en lo que falta.")
+        return Optional.of(AssistantReply.say("passing-grade", Grades.plural(atRisk.size(), "estudiante está", "estudiantes están") + " en riesgo de perder: necesitan más de " + Grades.format(3.5) + " en lo que falta.")
                 .withItems(items).withActions(simulator));
     }
 }
