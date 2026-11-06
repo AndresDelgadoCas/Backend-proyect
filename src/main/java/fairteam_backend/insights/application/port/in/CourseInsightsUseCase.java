@@ -8,7 +8,9 @@ import fairteam_backend.insights.domain.grading.GradingScheme;
 
 /** Inbound port: the full reading of a course, its projections and the spoken briefing. */
 public interface CourseInsightsUseCase {
-    record SchemeView(List<Integer> weights, double passingGrade, List<String> periods, List<String> observedPeriods, boolean custom) { }
+    /** @param maxGrade the course's scale; every grade in the insights is on 0–5 and is multiplied by maxGrade / 5 to show it. */
+    record SchemeView(List<Integer> weights, double passingGrade, List<String> periods, List<String> observedPeriods, boolean custom,
+            double maxGrade) { }
 
     record CourseInsights(CourseAnalysis analysis, SchemeView scheme, List<GradeProjection> projections, String briefing) { }
 
