@@ -30,7 +30,7 @@ public class Grade {
     @JoinColumn(name = "subject_id", nullable = false)
     private Subject subject;
 
-    @Column(nullable = false, precision = 3, scale = 2)
+    @Column(nullable = false, precision = 6, scale = 4)
     private BigDecimal grade;
 
     @Column(nullable = false, length = 20)
