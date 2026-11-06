@@ -12,6 +12,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 @Table(name = "grades")
@@ -66,6 +67,9 @@ public class Grade {
         this.id = id;
     }
 
+    // Write-only: responses carry studentId/subjectId. Serializing the lazy relations fired one query per
+    // grade (N+1), leaked Hibernate internals and repeated every student's e-mail in each grade.
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public Student getStudent() {
         return student;
     }
@@ -74,6 +78,7 @@ public class Grade {
         this.student = student;
     }
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public Subject getSubject() {
         return subject;
     }
