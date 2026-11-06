@@ -7,8 +7,10 @@ public record WorkshopGenerationResponseDTO(
         String subject,
         String targetLevel,
         String summary,
+        String studentIntro,
         List<String> learningObjectives,
         List<WorkshopActivityDTO> activities,
         List<AssessmentQuestionDTO> assessment,
+        List<String> teacherNotes,
         List<String> sourceReferences) {
 }
