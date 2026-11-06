@@ -18,6 +18,7 @@ import fairteam_backend.insights.application.port.out.CourseDataPort;
 import fairteam_backend.insights.application.port.out.CourseDataPort.CourseData;
 import fairteam_backend.insights.application.port.out.GradingSchemePort;
 import fairteam_backend.insights.domain.CourseAnalysis;
+import fairteam_backend.insights.domain.Grades;
 import fairteam_backend.insights.domain.CourseAnalyzer;
 import fairteam_backend.insights.domain.CourseCsvReport;
 import fairteam_backend.insights.domain.StudentPerformance;
@@ -73,8 +74,11 @@ public class CourseInsightsService implements CourseInsightsUseCase, DraftFeedba
         List<String> periods = new ArrayList<>(analysis.periods());
         while (periods.size() < scheme.periods()) periods.add("Corte " + (periods.size() + 1));
         Map<Long, GradeProjection> projections = new LinkedHashMap<>();
-        for (StudentPerformance p : analysis.students()) projections.put(p.student().id(), projector.project(p, analysis.periods(), scheme));
-        SchemeView view = new SchemeView(scheme.weights(), scheme.passingGrade(), List.copyOf(periods), analysis.periods(), stored.isPresent());
+        try (var scale = new ScaleScope(Grades.useScale(data.maxGrade()))) {
+            for (StudentPerformance p : analysis.students()) projections.put(p.student().id(), projector.project(p, analysis.periods(), scheme));
+        }
+        SchemeView view = new SchemeView(scheme.weights(), scheme.passingGrade(), List.copyOf(periods), analysis.periods(), stored.isPresent(),
+                data.maxGrade());
         return new Reading(data, analysis, view, projections, attendance.statsFor(courseId));
     }
 
@@ -86,7 +90,18 @@ public class CourseInsightsService implements CourseInsightsUseCase, DraftFeedba
     @Override
     public CourseInsights insights(long courseId, String teacherName) {
         Reading r = read(courseId);
-        return new CourseInsights(r.analysis(), r.scheme(), List.copyOf(r.projections().values()), briefing(r, teacherName));
+        try (var scale = scaled(r)) {
+            return new CourseInsights(r.analysis(), r.scheme(), List.copyOf(r.projections().values()), briefing(r, teacherName));
+        }
+    }
+
+    /** Texts written while this is open show grades in the course's scale (5, 10, 100…). */
+    private static ScaleScope scaled(Reading r) { return new ScaleScope(Grades.useScale(r.data().maxGrade())); }
+
+    private record ScaleScope(AutoCloseable inner) implements AutoCloseable {
+        @Override public void close() {
+            try { inner.close(); } catch (Exception ignored) { /* restoring a ThreadLocal cannot fail */ }
+        }
     }
 
     @Override
@@ -99,23 +114,30 @@ public class CourseInsightsService implements CourseInsightsUseCase, DraftFeedba
     @Override
     public String csvReport(long courseId) {
         Reading r = read(courseId);
-        return CourseCsvReport.of(r.analysis(), r.projections());
+        try (var scale = scaled(r)) {
+            return CourseCsvReport.of(r.analysis(), r.projections());
+        }
     }
 
     @Override
     public Feedback draft(long courseId, long studentId, FeedbackTone tone, String teacherName) {
         Reading r = read(courseId);
         StudentPerformance student = r.analysis().student(studentId).orElseThrow(() -> new StudentNotFoundException(studentId));
-        String body = FeedbackTemplate.forTone(tone).compose(student, r.projections().get(studentId), r.data().name(), teacherName);
+        String body;
+        try (var scale = scaled(r)) {
+            body = FeedbackTemplate.forTone(tone).compose(student, r.projections().get(studentId), r.data().name(), teacherName);
+        }
         return new Feedback(studentId, student.student().name(), student.student().email(), r.data().name() + ": seguimiento de tu proceso", body, tone);
     }
 
     @Override
     public AssistantReply ask(long courseId, String question, String teacherName) {
         Reading r = read(courseId);
-        AssistantContext context = new AssistantContext(teacherName, r.analysis(), r.projections(), r.data().materials(),
-                courseData.courses(), briefing(r, teacherName), r.attendance());
-        return assistant.answer(question, context);
+        try (var scale = scaled(r)) {
+            AssistantContext context = new AssistantContext(teacherName, r.analysis(), r.projections(), r.data().materials(),
+                    courseData.courses(), briefing(r, teacherName), r.attendance());
+            return assistant.answer(question, context);
+        }
     }
 
     @Override
