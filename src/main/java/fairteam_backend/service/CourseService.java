@@ -37,6 +37,7 @@ public class CourseService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe un curso con ese nombre.");
         }
         course.setName(course.getName().trim());
+        if (course.getMaxGrade() != null) course.setMaxGrade(checkScale(course.getMaxGrade()));
         return courses.save(course);
     }
 
@@ -47,6 +48,7 @@ public class CourseService {
         existing.setName(input.getName().trim());
         existing.setPeriod(input.getPeriod() == null ? null : input.getPeriod().trim());
         existing.setDescription(input.getDescription() == null ? null : input.getDescription().trim());
+        if (input.getMaxGrade() != null) existing.setMaxGrade(checkScale(input.getMaxGrade()));
         return courses.save(existing);
     }
 
@@ -73,5 +75,10 @@ public class CourseService {
 
     private static ResponseStatusException notFound() {
         return new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontró el curso.");
+    }
+
+    private static java.math.BigDecimal checkScale(java.math.BigDecimal max) {
+        try { return fairteam_backend.gradebook.GradeSheetRules.checkScale(max); }
+        catch (IllegalArgumentException ex) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage()); }
     }
 }
