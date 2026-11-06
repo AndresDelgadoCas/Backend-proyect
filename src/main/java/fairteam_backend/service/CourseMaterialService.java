@@ -12,6 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import fairteam_backend.entity.Course;
 import fairteam_backend.entity.CourseMaterial;
+import fairteam_backend.material.MaterialContentProvider;
 import fairteam_backend.dto.CourseMaterialDTO;
 import fairteam_backend.repository.CourseMaterialRepository;
 import fairteam_backend.repository.CourseRepository;
@@ -22,7 +23,10 @@ public class CourseMaterialService {
     private final CourseMaterialRepository materials;
     private final CourseRepository courses;
 
-    public CourseMaterialService(CourseMaterialRepository materials, CourseRepository courses) {
+    private final MaterialContentProvider contents;
+
+    public CourseMaterialService(CourseMaterialRepository materials, CourseRepository courses, MaterialContentProvider contents) {
+        this.contents = contents;
         this.materials = materials;
         this.courses = courses;
     }
@@ -53,16 +57,14 @@ public class CourseMaterialService {
         }
     }
 
-    @Transactional(readOnly = true)
-    public CourseMaterial findById(Long courseId, Long materialId) {
-        requireCourse(courseId);
-        return materials.findByIdAndCourse_Id(materialId, courseId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontró el material en este curso."));
-    }
-
     @Transactional
     public void delete(Long courseId, Long materialId) {
-        materials.delete(findById(courseId, materialId));
+        requireCourse(courseId);
+        // Checking the metadata is enough; loading the whole file just to delete it was wasted work.
+        materials.findMetadataByIdAndCourseId(materialId, courseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontró el material en este curso."));
+        materials.deleteById(materialId);
+        contents.forget(materialId);
     }
 
     private void requireCourse(Long courseId) {

@@ -18,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import fairteam_backend.dto.CourseMaterialDTO;
 import fairteam_backend.dto.WorkshopGenerationResponseDTO;
+import fairteam_backend.material.MaterialContentProvider;
 import fairteam_backend.service.AiWorkshopService;
 import fairteam_backend.service.CourseMaterialService;
 import fairteam_backend.service.StoredMaterialMultipartFile;
@@ -28,8 +29,11 @@ import fairteam_backend.service.StoredMaterialMultipartFile;
 public class CourseMaterialController {
     private final CourseMaterialService service;
     private final AiWorkshopService aiWorkshopService;
+    private final MaterialContentProvider contents;
 
-    public CourseMaterialController(CourseMaterialService service, AiWorkshopService aiWorkshopService) {
+    public CourseMaterialController(CourseMaterialService service, AiWorkshopService aiWorkshopService,
+            MaterialContentProvider contents) {
+        this.contents = contents;
         this.service = service;
         this.aiWorkshopService = aiWorkshopService;
     }
@@ -54,7 +58,8 @@ public class CourseMaterialController {
             @RequestParam(required = false) String learningContext,
             @RequestParam(required = false) String generationType,
             @RequestParam(required = false) String activityStyles) {
-        var material = service.findById(courseId, materialId);
+        // A proxy: the PDF is read only if the request passes validation and reaches the AI call.
+        var material = contents.forCourse(courseId, materialId);
         return aiWorkshopService.generateWorkshop(new StoredMaterialMultipartFile(material), subject, targetLevel,
                 learningObjective, learningContext, generationType, activityStyles);
     }
@@ -75,7 +80,7 @@ public class CourseMaterialController {
                     HttpStatus.BAD_REQUEST, "Selecciona entre 1 y 6 materiales distintos.");
         }
         var files = materialIds.stream()
-                .map(id -> new StoredMaterialMultipartFile(service.findById(courseId, id)))
+                .map(id -> new StoredMaterialMultipartFile(contents.forCourse(courseId, id)))
                 .map(file -> (MultipartFile) file)
                 .toList();
         return aiWorkshopService.generateWorkshop(files, subject, targetLevel,
