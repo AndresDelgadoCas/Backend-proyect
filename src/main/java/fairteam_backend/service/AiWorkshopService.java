@@ -9,6 +9,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import fairteam_backend.application.port.out.AiWorkshopPort;
 import fairteam_backend.dto.WorkshopGenerationResponseDTO;
+import fairteam_backend.dto.WorkshopRequestDTO;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
@@ -23,40 +24,26 @@ public class AiWorkshopService {
         this.aiWorkshopPort = aiWorkshopPort;
     }
 
-    public WorkshopGenerationResponseDTO generateWorkshop(
-            MultipartFile file,
-            String subject,
-            String targetLevel,
-            String learningObjective,
-            String learningContext,
-            String generationType) {
-        return generateWorkshop(List.of(file), subject, targetLevel, learningObjective, learningContext, generationType, null);
+    public WorkshopGenerationResponseDTO generateWorkshop(MultipartFile file, WorkshopRequestDTO request) {
+        return generateWorkshop(List.of(file), request);
     }
 
-    public WorkshopGenerationResponseDTO generateWorkshop(
-            MultipartFile file, String subject, String targetLevel, String learningObjective,
-            String learningContext, String generationType, String activityStyles) {
-        return generateWorkshop(List.of(file), subject, targetLevel, learningObjective, learningContext, generationType, activityStyles);
+    public WorkshopGenerationResponseDTO generateWorkshop(List<MultipartFile> files, WorkshopRequestDTO request) {
+        validate(files, request);
+        String type = request.generationType() == null || request.generationType().isBlank()
+                ? "WORKSHOP" : request.generationType().trim().toUpperCase(Locale.ROOT);
+        return aiWorkshopPort.generate(files, new WorkshopRequestDTO(
+                request.subject().trim(),
+                normalizeLevel(request.targetLevel()),
+                trimmed(request.learningObjective()),
+                trimmed(request.learningContext()),
+                type,
+                normalizeStyles(request.activityStyles()),
+                trimmed(request.teacherPrompt())));
     }
 
-    public WorkshopGenerationResponseDTO generateWorkshop(
-            List<MultipartFile> files,
-            String subject,
-            String targetLevel,
-            String learningObjective,
-            String learningContext,
-            String generationType,
-            String activityStyles) {
-        validate(files, subject, targetLevel, learningObjective, learningContext, generationType);
-        String styles = normalizeStyles(activityStyles);
-        return aiWorkshopPort.generate(
-                files,
-                subject.trim(),
-                normalizeLevel(targetLevel),
-                learningObjective == null ? "" : learningObjective.trim(),
-                learningContext == null ? "" : learningContext.trim(),
-                generationType == null ? "WORKSHOP" : generationType.trim().toUpperCase(Locale.ROOT),
-                styles);
+    private static String trimmed(String value) {
+        return value == null ? "" : value.trim();
     }
 
     /** Kinds of work the AI service understands; it validates them again, this keeps bad input out early. */
@@ -73,21 +60,30 @@ public class AiWorkshopService {
         return String.join(",", styles);
     }
 
-    private void validate(
-            List<MultipartFile> files,
-            String subject,
-            String targetLevel,
-            String learningObjective,
-            String learningContext,
-            String generationType) {
-        if (generationType != null && !generationType.trim().matches("(?i)WORKSHOP|QUIZ")) {
-            throw new ResponseStatusException(BAD_REQUEST, "El tipo debe ser WORKSHOP o QUIZ.");
+    static final int MAX_PROMPT = 2000;
+
+    private void validate(List<MultipartFile> files, WorkshopRequestDTO request) {
+        String generationType = request.generationType();
+        String subject = request.subject();
+        String targetLevel = request.targetLevel();
+        String learningObjective = request.learningObjective();
+        String learningContext = request.learningContext();
+        if (generationType != null && !generationType.isBlank() && !generationType.trim().matches("(?i)WORKSHOP|QUIZ|CUSTOM")) {
+            throw new ResponseStatusException(BAD_REQUEST, "El tipo debe ser WORKSHOP, QUIZ o CUSTOM.");
         }
-        if (files == null || files.isEmpty() || files.size() > 6) {
+        String prompt = trimmed(request.teacherPrompt());
+        if (prompt.length() > MAX_PROMPT) {
+            throw new ResponseStatusException(BAD_REQUEST, "Las indicaciones pueden tener máximo " + MAX_PROMPT + " caracteres.");
+        }
+        if (request.custom() && prompt.length() < 15) {
+            throw new ResponseStatusException(BAD_REQUEST, "Describe con al menos una frase qué taller quieres.");
+        }
+        int count = files == null ? 0 : files.size();
+        if (count > 6 || (count == 0 && !request.custom())) {
             throw new ResponseStatusException(BAD_REQUEST, "Selecciona entre 1 y 6 materiales.");
         }
         long totalSize = 0;
-        for (MultipartFile file : files) {
+        for (MultipartFile file : files == null ? List.<MultipartFile>of() : files) {
             if (file == null || file.isEmpty()) {
                 throw new ResponseStatusException(BAD_REQUEST, "Uno de los materiales está vacío.");
             }
