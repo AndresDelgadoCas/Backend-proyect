@@ -72,7 +72,7 @@ Para crear un taller se envía `multipart/form-data` con `file` (PDF, DOCX o TXT
 
 ## Patrones de diseño
 
-El backend conserva ejemplos concretos de Strategy (`strategy/`), Adapter (`adapter/`), Factory Method (`entity/factory/`), Observer (`observer/`) y Decorator (`decorator/`). El análisis de equipos compone Strategy y Decorator; los cambios académicos notifican observadores.
+El backend conserva ejemplos concretos de Strategy (`strategy/`), Adapter (`adapter/`), Factory Method (`entity/factory/`), Observer (`observer/`), Decorator (`decorator/`) y Proxy (`material/`, ver [docs/proxy-pattern.md](docs/proxy-pattern.md)). El análisis de equipos compone Strategy y Decorator; los cambios académicos notifican observadores.
 
 La integración de talleres usa una frontera hexagonal: `AiWorkshopService` valida el caso de uso y depende del puerto `application/port/out/AiWorkshopPort`; `adapter/out/ai/AiWorkshopHttpAdapter` traduce ese puerto al protocolo HTTP del servicio Gemini. El controlador REST es el adaptador de entrada y se conserva la ruta pública existente.
 
