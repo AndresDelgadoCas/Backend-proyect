@@ -50,12 +50,17 @@ public class CourseAnalyzer {
             int risk = riskStrategy.score(null, Direction.UNKNOWN, 0);
             return new StudentPerformance(student, null, 0, profile, List.of(), null, Direction.UNKNOWN, risk, List.of());
         }
-        double average = Grades.average(own.stream().map(GradeRecord::value).toList());
         List<PeriodAverage> points = new ArrayList<>();
         for (String period : periods) {
-            List<Double> marks = own.stream().filter(g -> PeriodOrder.normalize(g.period()).equals(period)).map(GradeRecord::value).toList();
-            if (!marks.isEmpty()) points.add(new PeriodAverage(period, Grades.average(marks)));
+            List<GradeRecord> marks = own.stream().filter(g -> PeriodOrder.normalize(g.period()).equals(period)).toList();
+            if (!marks.isEmpty()) points.add(new PeriodAverage(period, GradeRecord.periodAverage(marks)));
         }
+        // With activity weights, the overall average is the mean of the weighted periods (what the teacher sees
+        // in the grade book); without them it stays the plain mean of all grades, as before.
+        boolean weighted = own.stream().anyMatch(g -> g.weight() != null);
+        double average = weighted && !points.isEmpty()
+                ? Grades.average(points.stream().map(PeriodAverage::average).toList())
+                : Grades.average(own.stream().map(GradeRecord::value).toList());
         Double delta = points.size() >= 2 ? points.get(points.size() - 1).average() - points.get(0).average() : null;
         Direction direction = Direction.of(delta);
         return new StudentPerformance(student, average, own.size(), Level.fromAverage(average), List.copyOf(points), delta,
