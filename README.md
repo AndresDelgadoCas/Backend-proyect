@@ -119,6 +119,16 @@ Endpoints (todos protegidos por JWT y Row Level Security):
 - `GET|POST /api/courses/{id}/students/{sid}/interventions` y `DELETE .../{interventionId}`: registro de apoyos
   (conversación, tutoría, taller, mensaje, familia, otro) con una nota breve.
 
+## Editor de notas y alta rápida
+
+- `GET /api/courses/{id}/grade-sheet?period=Corte 2`: el corte como tabla (estudiantes × temas). Sin `period`
+  abre el último corte con notas.
+- `PUT /api/courses/{id}/grade-sheet` con `{ period, changes: [{ studentId, subjectId, grade }] }`: guarda todo
+  en una transacción; `grade: null` borra la nota. Recalcula el nivel de los estudiantes tocados y avisa a los
+  observadores de notas.
+- `POST /api/courses/{id}/students/quick` con `{ text }`: una línea por estudiante, con correo opcional
+  separado por `;`, `,` o tabulación (como al copiar de Excel). Los repetidos se informan y no se crean.
+
 ## Tipos de taller
 
 Las rutas de generación aceptan `activityStyles` (hasta tres de `GUIDED`, `CODE`, `APP`, `DEPLOY`, `CASE`, `TEAM`).
