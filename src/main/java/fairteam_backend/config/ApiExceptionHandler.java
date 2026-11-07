@@ -56,6 +56,13 @@ public class ApiExceptionHandler {
         return body(HttpStatus.BAD_REQUEST, "Falta el dato \"" + ex.getParameterName() + "\".");
     }
 
+    /** Two clicks at once (or two tabs) creating the same thing: say so instead of a 500. */
+    @ExceptionHandler(org.springframework.dao.DuplicateKeyException.class)
+    public ResponseEntity<Map<String, Object>> handleDuplicate(org.springframework.dao.DuplicateKeyException ex) {
+        log.info("Duplicate key: {}", ex.getMostSpecificCause().getMessage());
+        return body(HttpStatus.CONFLICT, "Eso ya existe. Recarga la página para ver la versión guardada.");
+    }
+
     static ResponseEntity<Map<String, Object>> body(HttpStatusCode status, String reason) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", Instant.now().toString());
