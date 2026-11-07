@@ -205,6 +205,14 @@ public class GradeSheetService {
         }
     }
 
+    /** The activity used as a column with this name, created if the teacher never used it before. */
+    @Transactional
+    public long columnNamed(String rawName) {
+        String name = rawName == null ? "" : rawName.trim().replaceAll("\\s+", " ");
+        if (name.isEmpty() || name.length() > 100) throw bad("El nombre de la columna debe tener entre 1 y 100 caracteres.");
+        return subjectNamed(name);
+    }
+
     private long subjectNamed(String name) {
         List<Long> found = jdbc.queryForList("SELECT id FROM subjects WHERE lower(name) = lower(?) ORDER BY id LIMIT 1", Long.class, name);
         if (!found.isEmpty()) return found.get(0);
