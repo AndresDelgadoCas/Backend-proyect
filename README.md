@@ -142,6 +142,22 @@ El promedio de un corte pondera las columnas calificadas con sus porcentajes (la
 definitiva pondera los cortes con el esquema del curso (`PUT /grading-scheme`), que también calcula cuánto
 necesita cada estudiante en lo que falta.
 
+## Rúbricas
+
+Rúbricas analíticas por curso (`rubrics/`): criterios con peso y cuatro niveles descritos (Excelente, Bueno,
+Básico, Insuficiente). Cada nivel vale una parte fija de la nota máxima (100 %, 80 %, 60 % y 30 %), así que
+"Básico" en todo es exactamente la nota para aprobar en cualquier escala.
+
+- `POST /api/courses/{id}/rubrics/generate` con `{ activity, criteriaCount, teacherPrompt }`: borrador hecho por la
+  IA (no se guarda hasta que el docente lo revisa).
+- `POST /api/courses/{id}/rubrics` y `PUT /{rubricId}`: guarda la rúbrica; los pesos deben sumar 100 %.
+- `PUT /{rubricId}/students/{studentId}` con `{ levels: { criterionId: 0..3 }, comment }`: evalúa a un estudiante.
+- `POST /{rubricId}/publish` con `{ period, columnName }`: lleva las notas de quienes tienen todos los criterios
+  evaluados a una columna del libro de notas (usa `GradeSheetService`, así que también avisa a los observadores).
+
+Tablas `course_rubrics`, `course_rubric_criteria`, `course_rubric_scores` y `course_rubric_comments` (migración V10),
+aisladas por docente con RLS como el resto.
+
 ## Tipos de taller
 
 Las rutas de generación aceptan `activityStyles` (hasta tres de `GUIDED`, `CODE`, `APP`, `DEPLOY`, `CASE`, `TEAM`).
