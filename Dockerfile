@@ -9,4 +9,5 @@ RUN ./mvnw clean package -DskipTests
 
 EXPOSE 10000
 
-CMD ["sh", "-c", "java -jar target/*.jar --spring.flyway.enabled=true"]
+# Render gives 512 MB; without this the JVM only uses a quarter of it as heap.
+CMD ["sh", "-c", "java -XX:MaxRAMPercentage=70 -XX:+UseSerialGC -XX:+ExitOnOutOfMemoryError -jar target/*.jar --spring.flyway.enabled=true"]
