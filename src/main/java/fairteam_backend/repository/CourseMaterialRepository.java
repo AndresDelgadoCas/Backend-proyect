@@ -31,9 +31,6 @@ public interface CourseMaterialRepository extends JpaRepository<CourseMaterial, 
             + "from CourseMaterial m where m.id = :id and m.course.id = :courseId")
     Optional<Metadata> findMetadataByIdAndCourseId(@Param("id") Long id, @Param("courseId") Long courseId);
 
-    /** Only the file, for the proxy's lazy load; never fetched together with the metadata. */
-    @Query("select m.content from CourseMaterial m where m.id = :id and m.course.id = :courseId")
-    Optional<byte[]> findContentByIdAndCourseId(@Param("id") Long id, @Param("courseId") Long courseId);
 
     long countByCourse_Id(Long courseId);
 }

@@ -14,17 +14,25 @@ import fairteam_backend.repository.CourseMaterialRepository;
  */
 @Component
 public class MaterialContentProvider {
+    /** Loads the bytes of one material of one course. */
+    @FunctionalInterface
+    interface BytesLoader {
+        java.util.Optional<byte[]> load(long id, long courseId);
+    }
+
     private final CourseMaterialRepository materials;
+    private final BytesLoader bytes;
     private final MaterialContentCache cache;
 
     @Autowired
-    public MaterialContentProvider(CourseMaterialRepository materials,
-            @Value("${fairteam.materials.cache-bytes:41943040}") long cacheBytes) {
-        this(materials, new MaterialContentCache(cacheBytes));
+    public MaterialContentProvider(CourseMaterialRepository materials, MaterialBytes bytes,
+            @Value("${fairteam.materials.cache-bytes:20971520}") long cacheBytes) {
+        this(materials, bytes::load, new MaterialContentCache(cacheBytes));
     }
 
-    MaterialContentProvider(CourseMaterialRepository materials, MaterialContentCache cache) {
+    MaterialContentProvider(CourseMaterialRepository materials, BytesLoader bytes, MaterialContentCache cache) {
         this.materials = materials;
+        this.bytes = bytes;
         this.cache = cache;
     }
 
@@ -33,7 +41,7 @@ public class MaterialContentProvider {
         CourseMaterialRepository.Metadata meta = materials.findMetadataByIdAndCourseId(materialId, courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontró el material en este curso."));
         return new MaterialContentProxy(meta.getId(), meta.getFileName(), meta.getContentType(), meta.getFileSize(),
-                id -> materials.findContentByIdAndCourseId(id, courseId)
+                id -> bytes.load(id, courseId)
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontró el material en este curso.")),
                 cache);
     }

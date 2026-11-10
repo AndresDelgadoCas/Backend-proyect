@@ -19,7 +19,8 @@ import fairteam_backend.repository.CourseMaterialRepository;
 
 class MaterialContentProviderTest {
     private final CourseMaterialRepository repository = mock(CourseMaterialRepository.class);
-    private final MaterialContentProvider provider = new MaterialContentProvider(repository, new MaterialContentCache(1_000));
+    private final MaterialContentProvider.BytesLoader bytes = mock(MaterialContentProvider.BytesLoader.class);
+    private final MaterialContentProvider provider = new MaterialContentProvider(repository, bytes, new MaterialContentCache(1_000));
 
     private static CourseMaterialRepository.Metadata meta(long id) {
         return new CourseMaterialRepository.Metadata() {
@@ -42,23 +43,23 @@ class MaterialContentProviderTest {
     @Test
     void handsOutAProxyThatReadsTheFileOnlyWhenAsked() {
         when(repository.findMetadataByIdAndCourseId(9L, 3L)).thenReturn(Optional.of(meta(9)));
-        when(repository.findContentByIdAndCourseId(9L, 3L)).thenReturn(Optional.of(new byte[] {4, 2}));
+        when(bytes.load(9L, 3L)).thenReturn(Optional.of(new byte[] {4, 2}));
 
         MaterialContent material = provider.forCourse(3, 9);
         assertThat(material).isInstanceOf(MaterialContentProxy.class);
         assertThat(material.fileName()).isEqualTo("guia.pdf");
-        verify(repository, never()).findContentByIdAndCourseId(anyLong(), anyLong());
+        verify(bytes, never()).load(anyLong(), anyLong());
 
         assertThat(material.bytes()).containsExactly(4, 2);
         provider.forCourse(3, 9).bytes();
-        verify(repository, times(1)).findContentByIdAndCourseId(9L, 3L);
+        verify(bytes, times(1)).load(9L, 3L);
         verify(repository, times(2)).findMetadataByIdAndCourseId(9L, 3L);
     }
 
     @Test
     void forgettingAMaterialDropsItFromTheCache() {
         when(repository.findMetadataByIdAndCourseId(9L, 3L)).thenReturn(Optional.of(meta(9)));
-        when(repository.findContentByIdAndCourseId(9L, 3L)).thenReturn(Optional.of(new byte[] {4, 2}));
+        when(bytes.load(9L, 3L)).thenReturn(Optional.of(new byte[] {4, 2}));
         provider.forCourse(3, 9).bytes();
         provider.forget(9);
         assertThat(provider.cache().size()).isZero();
