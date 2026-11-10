@@ -18,10 +18,12 @@ public final class Rubric {
     public record CriterionDraft(Long id, String name, String description, BigDecimal weight, Levels levels) { }
 
     /** A rubric to save. Generated drafts come back in this shape so the teacher reviews them first. */
-    public record Draft(String title, String description, List<CriterionDraft> criteria) { }
+    public record Draft(String title, String description, List<CriterionDraft> criteria, Long activityId) {
+        public Draft(String title, String description, List<CriterionDraft> criteria) { this(title, description, criteria, null); }
+    }
 
     public record Summary(long id, String title, int criteria, int scored, int students, String period,
-            String columnName, LocalDateTime updatedAt) { }
+            String columnName, LocalDateTime updatedAt, Long activityId, String activityTitle) { }
 
     public record Student(long id, String name) { }
 
@@ -32,7 +34,8 @@ public final class Rubric {
     public record StudentResult(long studentId, Map<Long, Integer> levels, String comment, BigDecimal grade) { }
 
     public record Detail(long id, String title, String description, List<Criterion> criteria, List<Student> students,
-            List<StudentResult> results, double maxGrade, List<BigDecimal> levelGrades, String period, String columnName) { }
+            List<StudentResult> results, double maxGrade, List<BigDecimal> levelGrades, String period, String columnName,
+            Long activityId, String activityTitle, String activityTopic) { }
 
     /** Levels for one student; a criterion mapped to null clears it. */
     public record ScoreRequest(Map<Long, Integer> levels, String comment) { }
@@ -41,5 +44,9 @@ public final class Rubric {
 
     public record PublishResult(int published, int pending, String period, String columnName) { }
 
-    public record GenerateRequest(String activity, Integer criteriaCount, String teacherPrompt) { }
+    /** "The rubric of the last workshop about X": a saved activity id, or the latest of a kind/topic. */
+    public record FromActivityRequest(Long activityId, String kind, String topic, Integer criteriaCount) { }
+
+    /** Either the text of the activity or the id of a saved one (its content is read on the server). */
+    public record GenerateRequest(String activity, Integer criteriaCount, String teacherPrompt, Long activityId) { }
 }

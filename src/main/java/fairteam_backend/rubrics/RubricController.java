@@ -33,6 +33,12 @@ public class RubricController {
         return rubrics.generate(courseId, body);
     }
 
+    @PostMapping("/from-activity")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Rubric.Detail fromActivity(@PathVariable long courseId, @RequestBody Rubric.FromActivityRequest body) {
+        return rubrics.createFromActivity(courseId, body);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Rubric.Detail create(@PathVariable long courseId, @RequestBody Rubric.Draft body) {

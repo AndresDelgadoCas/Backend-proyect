@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import fairteam_backend.activities.ActivityService;
+import fairteam_backend.activities.ActivityText;
 import fairteam_backend.gradebook.GradeSheet;
 import fairteam_backend.gradebook.GradeSheetRules;
 import fairteam_backend.gradebook.GradeSheetService;
@@ -32,11 +34,13 @@ public class RubricService {
     private final JdbcTemplate jdbc;
     private final GradeSheetService gradeSheets;
     private final RubricGenerator generator;
+    private final ActivityService activities;
 
-    public RubricService(JdbcTemplate jdbc, GradeSheetService gradeSheets, RubricGenerator generator) {
+    public RubricService(JdbcTemplate jdbc, GradeSheetService gradeSheets, RubricGenerator generator, ActivityService activities) {
         this.jdbc = jdbc;
         this.gradeSheets = gradeSheets;
         this.generator = generator;
+        this.activities = activities;
     }
 
     @Transactional(readOnly = true)
@@ -44,37 +48,59 @@ public class RubricService {
         courseName(courseId);
         int students = count("SELECT count(*) FROM students WHERE course_id = ?", courseId);
         return jdbc.query("""
-                SELECT r.id, r.title, r.period, s.name, r.updated_at,
+                SELECT r.id, r.title, r.period, s.name, r.updated_at, r.activity_id, a.title AS activity_title,
                        (SELECT count(*) FROM course_rubric_criteria c WHERE c.rubric_id = r.id) AS criteria,
                        (SELECT count(*) FROM (SELECT sc.student_id FROM course_rubric_scores sc WHERE sc.rubric_id = r.id
                             GROUP BY sc.student_id
                             HAVING count(*) = (SELECT count(*) FROM course_rubric_criteria c2 WHERE c2.rubric_id = r.id)) done) AS scored
                 FROM course_rubrics r LEFT JOIN subjects s ON s.id = r.subject_id
+                LEFT JOIN course_activities a ON a.id = r.activity_id
                 WHERE r.course_id = ? ORDER BY r.updated_at DESC, r.id DESC""",
                 (rs, i) -> new Rubric.Summary(rs.getLong("id"), rs.getString("title"), rs.getInt("criteria"), rs.getInt("scored"),
-                        students, rs.getString("period"), rs.getString("name"), rs.getTimestamp("updated_at").toLocalDateTime()),
+                        students, rs.getString("period"), rs.getString("name"), rs.getTimestamp("updated_at").toLocalDateTime(),
+                        (Long) rs.getObject("activity_id"), rs.getString("activity_title")),
                 courseId);
     }
 
     /** Asks the AI for a draft. Nothing is saved: the teacher reviews and edits it first. */
     public Rubric.Draft generate(long courseId, Rubric.GenerateRequest request) {
         String course = courseName(courseId);
-        String activity = request == null || request.activity() == null ? "" : request.activity().trim();
+        if (request == null) throw bad("Describe la actividad en al menos una frase.");
+        String activity = request.activity() == null ? "" : request.activity().trim();
+        if (request.activityId() != null) {
+            // The rubric is built from the activity as it was saved, not from a summary typed again.
+            String saved = ActivityText.of(activities.get(courseId, request.activityId()));
+            activity = activity.isEmpty() ? saved : saved + "\nIndicaciones del docente: " + activity;
+        }
         if (activity.length() < 15) throw bad("Describe la actividad en al menos una frase.");
         int count = request.criteriaCount() == null ? 4 : request.criteriaCount();
         if (count < 3 || count > 6) throw bad("Pide entre 3 y 6 criterios.");
         String prompt = request.teacherPrompt() == null ? "" : request.teacherPrompt().trim();
         if (prompt.length() > 2000) throw bad("Las indicaciones pueden tener máximo 2000 caracteres.");
         String trimmed = activity.length() > MAX_ACTIVITY ? activity.substring(0, MAX_ACTIVITY) : activity;
-        return generator.generate(course, trimmed, count, prompt);
+        Rubric.Draft draft = generator.generate(course, trimmed, count, prompt);
+        return new Rubric.Draft(draft.title(), draft.description(), draft.criteria(), request.activityId());
+    }
+
+    /**
+     * Does the whole job Búho promises: finds the activity, asks the AI for a rubric built from it, saves it
+     * linked to the activity and returns it ready to grade.
+     */
+    public Rubric.Detail createFromActivity(long courseId, Rubric.FromActivityRequest request) {
+        Rubric.FromActivityRequest r = request == null ? new Rubric.FromActivityRequest(null, null, null, null) : request;
+        long activityId = r.activityId() != null ? activities.get(courseId, r.activityId()).id()
+                : activities.latest(courseId, r.kind() == null || r.kind().isBlank() ? null : r.kind().trim(), r.topic()).id();
+        Rubric.Draft draft = generate(courseId, new Rubric.GenerateRequest("", r.criteriaCount(), "", activityId));
+        return create(courseId, draft);
     }
 
     @Transactional
     public Rubric.Detail create(long courseId, Rubric.Draft draft) {
         courseName(courseId);
         Rubric.Draft clean = rule(() -> RubricScoring.clean(draft));
-        Long id = jdbc.queryForObject("INSERT INTO course_rubrics (course_id, title, description) VALUES (?, ?, ?) RETURNING id",
-                Long.class, courseId, clean.title(), clean.description());
+        Long activityId = activityOf(courseId, clean.activityId());
+        Long id = jdbc.queryForObject("INSERT INTO course_rubrics (course_id, title, description, activity_id) VALUES (?, ?, ?, ?) RETURNING id",
+                Long.class, courseId, clean.title(), clean.description(), activityId);
         writeCriteria(id, clean.criteria());
         return detail(courseId, id);
     }
@@ -83,8 +109,8 @@ public class RubricService {
     public Rubric.Detail update(long courseId, long rubricId, Rubric.Draft draft) {
         exists(courseId, rubricId);
         Rubric.Draft clean = rule(() -> RubricScoring.clean(draft));
-        jdbc.update("UPDATE course_rubrics SET title = ?, description = ?, updated_at = now() WHERE id = ?",
-                clean.title(), clean.description(), rubricId);
+        jdbc.update("UPDATE course_rubrics SET title = ?, description = ?, activity_id = ?, updated_at = now() WHERE id = ?",
+                clean.title(), clean.description(), activityOf(courseId, clean.activityId()), rubricId);
         writeCriteria(rubricId, clean.criteria());
         return detail(courseId, rubricId);
     }
@@ -99,8 +125,10 @@ public class RubricService {
     public Rubric.Detail detail(long courseId, long rubricId) {
         BigDecimal max = maxGrade(courseId);
         Map<String, Object> head = jdbc.queryForList("""
-                SELECT r.title, r.description, r.period, s.name AS column_name
+                SELECT r.title, r.description, r.period, s.name AS column_name, r.activity_id, a.title AS activity_title,
+                    a.topic AS activity_topic
                 FROM course_rubrics r LEFT JOIN subjects s ON s.id = r.subject_id
+                LEFT JOIN course_activities a ON a.id = r.activity_id
                 WHERE r.id = ? AND r.course_id = ?""", rubricId, courseId).stream().findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontró la rúbrica."));
         List<Rubric.Criterion> criteria = criteria(rubricId);
@@ -120,7 +148,9 @@ public class RubricService {
             results.add(new Rubric.StudentResult(student.id(), mine, comments.get(student.id()), RubricScoring.grade(criteria, mine, max)));
         }
         return new Rubric.Detail(rubricId, (String) head.get("title"), (String) head.get("description"), criteria, students,
-                results, max.doubleValue(), RubricScoring.levelGrades(max), (String) head.get("period"), (String) head.get("column_name"));
+                results, max.doubleValue(), RubricScoring.levelGrades(max), (String) head.get("period"), (String) head.get("column_name"),
+                head.get("activity_id") == null ? null : ((Number) head.get("activity_id")).longValue(),
+                (String) head.get("activity_title"), (String) head.get("activity_topic"));
     }
 
     /** Saves the levels of one student (null clears a criterion) and the optional comment. */
@@ -172,7 +202,8 @@ public class RubricService {
     public Rubric.PublishResult publish(long courseId, long rubricId, Rubric.PublishRequest request) {
         Rubric.Detail detail = detail(courseId, rubricId);
         String period = rule(() -> GradeSheetRules.normalizePeriod(request == null ? null : request.period()));
-        String column = request.columnName() == null || request.columnName().isBlank() ? detail.title() : request.columnName().trim();
+        String column = request.columnName() != null && !request.columnName().isBlank() ? request.columnName().trim()
+                : detail.activityTopic() != null ? detail.activityTopic() : detail.title();
         if (column.length() > 100) column = column.substring(0, 100);
         long subjectId = gradeSheets.columnNamed(column);
         List<GradeSheet.Change> changes = detail.results().stream().filter(r -> r.grade() != null)
@@ -181,6 +212,14 @@ public class RubricService {
         gradeSheets.save(courseId, period, changes, null);
         jdbc.update("UPDATE course_rubrics SET period = ?, subject_id = ?, updated_at = now() WHERE id = ?", period, subjectId, rubricId);
         return new Rubric.PublishResult(changes.size(), detail.students().size() - changes.size(), period, column);
+    }
+
+    /** The activity must belong to the course; anything else is ignored rather than linked by mistake. */
+    private Long activityOf(long courseId, Long activityId) {
+        if (activityId == null) return null;
+        Integer n = jdbc.queryForObject("SELECT count(*) FROM course_activities WHERE id = ? AND course_id = ?", Integer.class, activityId, courseId);
+        if (n == null || n == 0) throw bad("La actividad que quieres evaluar no es de este curso.");
+        return activityId;
     }
 
     private void writeCriteria(long rubricId, List<Rubric.CriterionDraft> criteria) {

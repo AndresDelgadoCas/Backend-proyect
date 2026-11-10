@@ -76,7 +76,7 @@ public final class RubricScoring {
         if (sum.subtract(HUNDRED).abs().compareTo(new BigDecimal("0.01")) > 0) {
             throw new IllegalArgumentException("Los pesos suman " + sum.stripTrailingZeros().toPlainString().replace('.', ',') + " %; deben sumar 100 %.");
         }
-        return new Rubric.Draft(title, text(draft.description()), cleaned);
+        return new Rubric.Draft(title, text(draft.description()), cleaned, draft.activityId());
     }
 
     private static String text(String value) {
