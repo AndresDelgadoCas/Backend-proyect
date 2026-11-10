@@ -102,7 +102,7 @@ public class AiWorkshopHttpAdapter implements AiWorkshopPort {
             String message = switch (ex.getStatusCode().value()) {
                 case 401, 403 -> "No se pudo autenticar la conexión interna con IA. Revisa AI_SERVICE_TOKEN en Render.";
                 case 413 -> "El material supera el límite permitido de 10 MB.";
-                case 422 -> "No pudimos extraer texto del material. Prueba con un PDF seleccionable, DOCX o TXT.";
+                case 422 -> detailOr(ex, "No pudimos extraer texto del material. Prueba con un PDF seleccionable, DOCX o TXT.");
                 case 429 -> "Gemini alcanzó el límite o la cuota disponible. Revisa la cuota de la API e inténtalo más tarde.";
                 case 503 -> "El servicio de IA no está configurado o disponible. Revisa GEMINI_API_KEY y AI_SERVICE_TOKEN en Render.";
                 case 502 -> upstreamGenerationMessage(ex);
@@ -112,6 +112,12 @@ public class AiWorkshopHttpAdapter implements AiWorkshopPort {
         } catch (RestClientException ex) {
             throw new ResponseStatusException(BAD_GATEWAY, "No se pudo completar la solicitud al servicio de IA.");
         }
+    }
+
+    /** The AI service explains material problems precisely (scanned PDF, damaged file…); show that. */
+    private String detailOr(RestClientResponseException ex, String fallback) {
+        String message = upstreamGenerationMessage(ex);
+        return message.startsWith("Gemini no pudo generar") ? fallback : message;
     }
 
     private String upstreamGenerationMessage(RestClientResponseException ex) {
