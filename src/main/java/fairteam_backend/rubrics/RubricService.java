@@ -203,7 +203,7 @@ public class RubricService {
         Rubric.Detail detail = detail(courseId, rubricId);
         String period = rule(() -> GradeSheetRules.normalizePeriod(request == null ? null : request.period()));
         String column = request.columnName() != null && !request.columnName().isBlank() ? request.columnName().trim()
-                : detail.activityTopic() != null ? detail.activityTopic() : detail.title();
+                : detail.activityTitle() != null ? detail.activityTitle() : detail.title();
         if (column.length() > 100) column = column.substring(0, 100);
         long subjectId = gradeSheets.columnNamed(column);
         List<GradeSheet.Change> changes = detail.results().stream().filter(r -> r.grade() != null)
