@@ -67,9 +67,9 @@ public class CourseMaterialController {
             @RequestParam(value = "materialIds", required = false) List<Long> materialIds,
             @ModelAttribute WorkshopRequestDTO request) {
         List<Long> ids = materialIds == null ? List.of() : materialIds;
-        if (ids.size() > 6 || new HashSet<>(ids).size() != ids.size() || (ids.isEmpty() && !request.custom())) {
+        if (ids.size() > 6 || new HashSet<>(ids).size() != ids.size()) {
             throw new org.springframework.web.server.ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Selecciona entre 1 y 6 materiales distintos.");
+                    HttpStatus.BAD_REQUEST, "Selecciona máximo 6 materiales distintos.");
         }
         var files = ids.stream()
                 .map(id -> new StoredMaterialMultipartFile(contents.forCourse(courseId, id)))

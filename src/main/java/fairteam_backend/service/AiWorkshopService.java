@@ -79,8 +79,11 @@ public class AiWorkshopService {
             throw new ResponseStatusException(BAD_REQUEST, "Describe con al menos una frase qué taller quieres.");
         }
         int count = files == null ? 0 : files.size();
-        if (count > 6 || (count == 0 && !request.custom())) {
-            throw new ResponseStatusException(BAD_REQUEST, "Selecciona entre 1 y 6 materiales.");
+        if (count > 6) throw new ResponseStatusException(BAD_REQUEST, "Selecciona máximo 6 materiales.");
+        // Without material the AI writes from the topic: a custom prompt or the learning objective must say what.
+        boolean topicGiven = request.learningObjective() != null && request.learningObjective().trim().length() >= 5;
+        if (count == 0 && !request.custom() && !topicGiven) {
+            throw new ResponseStatusException(BAD_REQUEST, "Elige un material o escribe el tema de la actividad.");
         }
         long totalSize = 0;
         for (MultipartFile file : files == null ? List.<MultipartFile>of() : files) {

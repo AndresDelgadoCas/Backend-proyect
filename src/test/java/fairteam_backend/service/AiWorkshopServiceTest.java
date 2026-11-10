@@ -54,9 +54,11 @@ class AiWorkshopServiceTest {
     }
 
     @Test
-    void workshopsAndQuizzesStillNeedMaterial() {
+    void withoutMaterialATopicIsNeeded() {
         assertThatThrownBy(() -> service.generateWorkshop(List.of(), request("WORKSHOP", PROMPT)))
-                .hasMessageContaining("entre 1 y 6 materiales");
+                .hasMessageContaining("escribe el tema");
+        when(port.generate(anyList(), any())).thenReturn(mock(WorkshopGenerationResponseDTO.class));
+        service.generateWorkshop(List.of(), new WorkshopRequestDTO("Filosofía", "MEDIUM", "La duda metódica de Descartes", null, "QUIZ", null, null));
         assertThatThrownBy(() -> service.generateWorkshop(List.of(pdf()), request("EXAM", null)))
                 .hasMessageContaining("WORKSHOP, QUIZ o CUSTOM");
     }
