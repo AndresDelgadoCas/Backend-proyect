@@ -30,7 +30,7 @@ public final class AssistantBrief {
 
     /** The request as the interpreter receives it. */
     public record Request(String message, List<Line> history, String course, double scale, String summary,
-            List<Topic> topics, List<Student> students, List<Activity> activities, List<Course> courses) { }
+            List<Topic> topics, List<Student> students, List<Activity> activities, List<Course> courses, String manual) { }
 
     public record Line(String role, String text) { }
 
@@ -62,7 +62,7 @@ public final class AssistantBrief {
     /** Long requests, references to earlier turns ("hazlo para ella") and anything the rules did not get go to the AI. */
     public static boolean worthInterpreting(String question, AssistantReply ruleReply, AssistantContext context) {
         if (ruleReply == null || "fallback".equals(ruleReply.intent())) return true;
-        if (List.of("follow-up", "empty", "small-talk", "briefing").contains(ruleReply.intent())) return false;
+        if (List.of("follow-up", "empty", "small-talk", "briefing", "how-to", "help").contains(ruleReply.intent())) return false;
         String text = AssistantQuery.normalize(question);
         if (text.split(" ").length >= 12) return true;
         return !context.history().isEmpty() && REFERENCE.matcher(text).find();
@@ -80,7 +80,7 @@ public final class AssistantBrief {
         List<Activity> activityCodes = activities.entrySet().stream().map(e -> new Activity(e.getKey(), e.getValue().kind(), e.getValue().title(),
                 e.getValue().topic() == null ? "" : e.getValue().topic(), e.getValue().created() == null ? "" : DAY.format(e.getValue().created()))).toList();
         List<Course> courseCodes = courses.entrySet().stream().map(e -> new Course(e.getKey(), e.getValue().name())).toList();
-        return new Request(encode(message), history, context.analysis().courseName(), 5.0, summary, topics, studentCodes, activityCodes, courseCodes);
+        return new Request(encode(message), history, context.analysis().courseName(), 5.0, summary, topics, studentCodes, activityCodes, courseCodes, AppManual.text());
     }
 
     /**
@@ -107,6 +107,8 @@ public final class AssistantBrief {
             case "switch_course" -> Optional.ofNullable(courses.get(i.course())).map(c -> AssistantReply.say("ai-course", orElse(text, "Abro " + c.name() + "."))
                     .andRun(ReplyAction.of("course", "Abrir " + c.name(), "courseId", String.valueOf(c.id())))).orElse(null);
             case "report" -> AssistantReply.say("ai-report", orElse(text, "Genero el informe del curso.")).andRun(ReplyAction.of("report", "Informe del curso"));
+            case "how_to" -> AppManual.entries().stream().filter(e -> e.id().equals(i.topic())).findFirst()
+                    .map(e -> HowToHandler.reply(e, null, context)).orElse(text.isBlank() ? null : AssistantReply.say("ai-answer", text));
             case "answer", "clarify" -> text.isBlank() ? null : AssistantReply.say("ai-" + i.action(), text);
             default -> null;
         });
