@@ -22,7 +22,7 @@ public class TenantSchemaStartupValidator implements ApplicationRunner {
             "workshop_recommendations", "workshops", "assignments",
             "assignment_submissions", "grading_rubrics", "rubric_criteria", "ai_evaluations",
             "course_grading_schemes", "attendance_records", "student_interventions", "grade_item_weights",
-            "course_rubrics", "course_rubric_criteria", "course_rubric_scores", "course_rubric_comments");
+            "course_rubrics", "course_rubric_criteria", "course_rubric_scores", "course_rubric_comments", "course_activities");
 
     private final JdbcTemplate jdbcTemplate;
 
