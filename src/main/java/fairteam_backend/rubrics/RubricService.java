@@ -87,10 +87,12 @@ public class RubricService {
      * linked to the activity and returns it ready to grade.
      */
     public Rubric.Detail createFromActivity(long courseId, Rubric.FromActivityRequest request) {
-        Rubric.FromActivityRequest r = request == null ? new Rubric.FromActivityRequest(null, null, null, null) : request;
+        Rubric.FromActivityRequest r = request == null ? new Rubric.FromActivityRequest(null, null, null, null, null) : request;
         long activityId = r.activityId() != null ? activities.get(courseId, r.activityId()).id()
                 : activities.latest(courseId, r.kind() == null || r.kind().isBlank() ? null : r.kind().trim(), r.topic()).id();
-        Rubric.Draft draft = generate(courseId, new Rubric.GenerateRequest("", r.criteriaCount(), "", activityId));
+        String prompt = r.teacherPrompt() == null ? "" : r.teacherPrompt().trim();
+        Rubric.Draft draft = generate(courseId, new Rubric.GenerateRequest("", r.criteriaCount(),
+                prompt.isEmpty() ? "" : "Pedido del docente: " + (prompt.length() > 600 ? prompt.substring(0, 600) : prompt), activityId));
         return create(courseId, draft);
     }
 

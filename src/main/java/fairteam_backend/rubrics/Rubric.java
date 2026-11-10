@@ -45,7 +45,8 @@ public final class Rubric {
     public record PublishResult(int published, int pending, String period, String columnName) { }
 
     /** "The rubric of the last workshop about X": a saved activity id, or the latest of a kind/topic. */
-    public record FromActivityRequest(Long activityId, String kind, String topic, Integer criteriaCount) { }
+    /** {@code teacherPrompt}: what the teacher asked for ("que evalúe el trabajo en equipo"), passed to the AI. */
+    public record FromActivityRequest(Long activityId, String kind, String topic, Integer criteriaCount, String teacherPrompt) { }
 
     /** Either the text of the activity or the id of a saved one (its content is read on the server). */
     public record GenerateRequest(String activity, Integer criteriaCount, String teacherPrompt, Long activityId) { }

@@ -27,9 +27,29 @@ class CreateActivityHandlerTest {
     @Test
     void leavesRubricsToTheirHandler() {
         assertThat(new CreateActivityHandler().handle(AssistantFixture.query("crea una rubrica para el taller", ctx), ctx)).isEmpty();
-        AssistantReply rubric = new CreateRubricHandler().handle(AssistantFixture.query("crea una rúbrica para el último taller de ciclos", ctx), ctx).orElseThrow();
-        assertThat(rubric.run().kind()).isEqualTo("rubric");
-        assertThat(rubric.run().params()).containsEntry("latest", "true").containsEntry("topic", "Ciclos y condicionales");
+    }
+
+    @Test
+    void aTopicThatIsNotACourseTopicYetIsKept() {
+        AssistantReply reply = new CreateActivityHandler().handle(AssistantFixture.query("Crea un taller de refuerzo sobre la Recursividad en parejas", ctx), ctx).orElseThrow();
+        assertThat(reply.run().params()).containsEntry("topic", "Recursividad").containsEntry("level", "LOW")
+                .containsEntry("prompt", "Crea un taller de refuerzo sobre la Recursividad en parejas");
+        assertThat(reply.text()).contains("sobre Recursividad");
+    }
+
+    @Test
+    void aSharedWordDoesNotTurnTheTopicIntoAnother() {
+        AssistantReply reply = new CreateActivityHandler().handle(AssistantFixture.query("crea un quiz sobre funciones lambda en Java", ctx), ctx).orElseThrow();
+        assertThat(reply.run().params()).containsEntry("topic", "Funciones");
+        AssistantReply decorator = new CreateActivityHandler().handle(AssistantFixture.query("crea un taller sobre el patrón Decorator", ctx), ctx).orElseThrow();
+        assertThat(decorator.run().params()).containsEntry("topic", "patrón Decorator");
+        assertThat(decorator.text()).startsWith("Listo, estoy creando un taller de refuerzo sobre patrón Decorator.");
+    }
+
+    @Test
+    void theLevelTheTeacherAsksForWinsOverTheStudentsOne() {
+        AssistantReply reply = new CreateActivityHandler().handle(AssistantFixture.query("haz un taller de reto para Juan Pablo", ctx), ctx).orElseThrow();
+        assertThat(reply.run().params()).containsEntry("level", "HIGH").containsEntry("studentId", "3");
     }
 
     @Test

@@ -45,5 +45,13 @@ final class AssistantFixture {
         return new AssistantContext("Ana", analysis, Map.of(), 0, List.of(new CourseRef(12, "Cálculo")), "Hola");
     }
 
+    /** The same course with saved activities (newest first) and earlier turns. */
+    static AssistantContext withActivities(Turn... history) {
+        return context().withConversation(List.of(
+                new ActivityRef(31, "quiz", "Quiz de funciones", "Funciones", java.time.LocalDate.of(2026, 11, 8)),
+                new ActivityRef(30, "workshop", "Taller de ciclos anidados", "Ciclos y condicionales", java.time.LocalDate.of(2026, 11, 5)),
+                new ActivityRef(29, "workshop", "Taller de recursividad", "Recursividad", java.time.LocalDate.of(2026, 10, 30))), List.of(history));
+    }
+
     static AssistantQuery query(String text, AssistantContext context) { return AssistantQuery.parse(text, context); }
 }

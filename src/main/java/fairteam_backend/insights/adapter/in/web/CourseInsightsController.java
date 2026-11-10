@@ -25,6 +25,7 @@ import fairteam_backend.insights.application.port.in.AskAssistantUseCase;
 import fairteam_backend.insights.application.port.in.CourseInsightsUseCase;
 import fairteam_backend.insights.application.port.in.DraftFeedbackUseCase;
 import fairteam_backend.insights.domain.assistant.AssistantReply;
+import fairteam_backend.insights.domain.assistant.Turn;
 import fairteam_backend.insights.domain.feedback.FeedbackTone;
 import fairteam_backend.insights.domain.grading.GradingScheme;
 
@@ -44,7 +45,8 @@ public class CourseInsightsController {
 
     public record SchemeRequest(List<Integer> weights, Double passingGrade) { }
 
-    public record QuestionRequest(String question) { }
+    /** The question plus the last turns of the conversation, so Búho remembers what was said and offered. */
+    public record QuestionRequest(String question, List<Turn> history) { }
 
     @GetMapping("/insights")
     public CourseInsightsUseCase.CourseInsights insights(@PathVariable long courseId, @AuthenticationPrincipal Jwt jwt) {
@@ -74,7 +76,9 @@ public class CourseInsightsController {
     public AssistantReply ask(@PathVariable long courseId, @RequestBody QuestionRequest request, @AuthenticationPrincipal Jwt jwt) {
         String question = request.question() == null ? "" : request.question().trim();
         if (question.length() > 500) question = question.substring(0, 500);
-        return assistant.ask(courseId, question, teacher(jwt));
+        List<Turn> history = request.history() == null ? List.of()
+                : request.history().subList(Math.max(0, request.history().size() - 10), request.history().size());
+        return assistant.ask(courseId, question, teacher(jwt), history);
     }
 
     private static String teacher(Jwt jwt) {

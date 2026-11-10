@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import fairteam_backend.insights.application.port.out.ActivityCatalogPort;
+import fairteam_backend.insights.application.port.out.AssistantInterpreterPort;
 import fairteam_backend.insights.application.port.out.AttendancePort;
 import fairteam_backend.insights.application.port.out.CourseDataPort;
 import fairteam_backend.insights.application.port.out.GradingSchemePort;
@@ -30,8 +32,8 @@ public class InsightsConfiguration {
 
     @Bean
     CourseInsightsService courseInsightsService(CourseDataPort courseData, GradingSchemePort schemes, RiskScoringStrategy risk,
-            AttendancePort attendance) {
+            AttendancePort attendance, ActivityCatalogPort activities, AssistantInterpreterPort interpreter) {
         return new CourseInsightsService(courseData, schemes, new CourseAnalyzer(risk), new GradeProjector(),
-                AssistantEngine.standard(), Clock.system(ZoneId.of("America/Bogota")), attendance);
+                AssistantEngine.standard(), Clock.system(ZoneId.of("America/Bogota")), attendance, activities, interpreter);
     }
 }

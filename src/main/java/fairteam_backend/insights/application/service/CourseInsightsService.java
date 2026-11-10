@@ -13,6 +13,8 @@ import fairteam_backend.insights.application.port.in.AskAssistantUseCase;
 import fairteam_backend.insights.application.port.in.CourseInsightsUseCase;
 import fairteam_backend.insights.application.port.in.DraftFeedbackUseCase;
 import fairteam_backend.insights.application.port.in.TeacherOverviewUseCase;
+import fairteam_backend.insights.application.port.out.ActivityCatalogPort;
+import fairteam_backend.insights.application.port.out.AssistantInterpreterPort;
 import fairteam_backend.insights.application.port.out.AttendancePort;
 import fairteam_backend.insights.application.port.out.CourseDataPort;
 import fairteam_backend.insights.application.port.out.CourseDataPort.CourseData;
@@ -22,10 +24,12 @@ import fairteam_backend.insights.domain.Grades;
 import fairteam_backend.insights.domain.CourseAnalyzer;
 import fairteam_backend.insights.domain.CourseCsvReport;
 import fairteam_backend.insights.domain.StudentPerformance;
+import fairteam_backend.insights.domain.assistant.AssistantBrief;
 import fairteam_backend.insights.domain.assistant.AssistantContext;
 import fairteam_backend.insights.domain.attendance.AttendanceStats;
 import fairteam_backend.insights.domain.assistant.AssistantEngine;
 import fairteam_backend.insights.domain.assistant.AssistantReply;
+import fairteam_backend.insights.domain.assistant.Turn;
 import fairteam_backend.insights.domain.briefing.Briefing;
 import fairteam_backend.insights.domain.feedback.FeedbackTemplate;
 import fairteam_backend.insights.domain.feedback.FeedbackTone;
@@ -45,6 +49,8 @@ public class CourseInsightsService implements CourseInsightsUseCase, DraftFeedba
     private final AssistantEngine assistant;
     private final Clock clock;
     private final AttendancePort attendance;
+    private final ActivityCatalogPort activities;
+    private final AssistantInterpreterPort interpreter;
 
     public CourseInsightsService(CourseDataPort courseData, GradingSchemePort schemes, CourseAnalyzer analyzer,
             GradeProjector projector, AssistantEngine assistant, Clock clock) {
@@ -53,6 +59,13 @@ public class CourseInsightsService implements CourseInsightsUseCase, DraftFeedba
 
     public CourseInsightsService(CourseDataPort courseData, GradingSchemePort schemes, CourseAnalyzer analyzer,
             GradeProjector projector, AssistantEngine assistant, Clock clock, AttendancePort attendance) {
+        this(courseData, schemes, analyzer, projector, assistant, clock, attendance, ActivityCatalogPort.none(), AssistantInterpreterPort.none());
+    }
+
+    public CourseInsightsService(CourseDataPort courseData, GradingSchemePort schemes, CourseAnalyzer analyzer, GradeProjector projector,
+            AssistantEngine assistant, Clock clock, AttendancePort attendance, ActivityCatalogPort activities, AssistantInterpreterPort interpreter) {
+        this.activities = activities;
+        this.interpreter = interpreter;
         this.attendance = attendance;
         this.courseData = courseData;
         this.schemes = schemes;
@@ -132,11 +145,26 @@ public class CourseInsightsService implements CourseInsightsUseCase, DraftFeedba
 
     @Override
     public AssistantReply ask(long courseId, String question, String teacherName) {
+        return ask(courseId, question, teacherName, List.of());
+    }
+
+    /**
+     * Búho's answer. Its rules answer first (instant, no AI); long requests, references to earlier turns and
+     * anything the rules did not understand go to the AI interpreter, which picks the action to run. If the AI
+     * is slow or down, the rules' answer stands.
+     */
+    @Override
+    public AssistantReply ask(long courseId, String question, String teacherName, List<Turn> history) {
         Reading r = read(courseId);
         try (var scale = scaled(r)) {
             AssistantContext context = new AssistantContext(teacherName, r.analysis(), r.projections(), r.data().materials(),
-                    courseData.courses(), briefing(r, teacherName), r.attendance());
-            return assistant.answer(question, context);
+                    courseData.courses(), briefing(r, teacherName), r.attendance()).withConversation(activities.recent(courseId), history);
+            AssistantReply rules = assistant.answer(question, context);
+            if (!AssistantBrief.worthInterpreting(question, rules, context)) return rules;
+            AssistantBrief brief = new AssistantBrief(context);
+            return interpreter.interpret(brief.request(question))
+                    .flatMap(understood -> brief.reply(understood, rewritten -> assistant.answer(rewritten, context)))
+                    .orElse(rules);
         }
     }
 

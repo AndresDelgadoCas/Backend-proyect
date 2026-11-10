@@ -10,7 +10,7 @@ public class AssistantEngine {
 
     public static AssistantEngine standard() {
         return new AssistantEngine(List.of(
-                new SwitchCourseHandler(), new SmallTalkHandler(), new HelpHandler(), new NoCourseDataHandler(), new DailyBriefingHandler(),
+                new FollowUpHandler(), new SwitchCourseHandler(), new SmallTalkHandler(), new HelpHandler(), new NoCourseDataHandler(), new DailyBriefingHandler(),
                 new CreateRubricHandler(), new CreateActivityHandler(), new DraftMessageHandler(), new CourseReportHandler(), new NeedsGradesHandler(), new ExplainRiskHandler(), new TeacherAdviceHandler(),
                 new PassingGradeHandler(), new MissingGradesHandler(), new AttendanceHandler(), new CourseCountsHandler(), new SubjectExtremesHandler(), new PeriodComparisonHandler(), new FallingBehindHandler(), new ImprovingHandler(), new BestStudentsHandler(),
                 new StudentStatusHandler(), new AveragesHandler(), new WhoNeedsHelpHandler(), new NavigationHandler(),
