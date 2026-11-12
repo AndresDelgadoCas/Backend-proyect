@@ -12,8 +12,7 @@ public class AssistantEngine {
         return new AssistantEngine(List.of(
                 new FollowUpHandler(), new SwitchCourseHandler(), new SmallTalkHandler(), new HelpHandler(), new HowToHandler(), new NoCourseDataHandler(), new DailyBriefingHandler(),
                 new CreateRubricHandler(), new CreateActivityHandler(), new DraftMessageHandler(), new CourseReportHandler(), new NeedsGradesHandler(), new ExplainRiskHandler(), new TeacherAdviceHandler(),
-                new PassingGradeHandler(), new MissingGradesHandler(), new AttendanceHandler(), new CourseCountsHandler(), new WorstStudentsHandler(), new SubjectExtremesHandler(), new PeriodComparisonHandler(), new FallingBehindHandler(), new ImprovingHandler(), new BestStudentsHandler(),
-                new StudentStatusHandler(), new AveragesHandler(), new WhoNeedsHelpHandler(), new NavigationHandler(),
+                new CourseTopicGate(new PassingGradeHandler()), new CourseTopicGate(new MissingGradesHandler()), new CourseTopicGate(new AttendanceHandler()), new CourseTopicGate(new CourseCountsHandler()), new CourseTopicGate(new WorstStudentsHandler()), new CourseTopicGate(new SubjectExtremesHandler()), new CourseTopicGate(new PeriodComparisonHandler()), new CourseTopicGate(new FallingBehindHandler()), new CourseTopicGate(new ImprovingHandler()), new CourseTopicGate(new BestStudentsHandler()), new CourseTopicGate(new StudentStatusHandler()), new CourseTopicGate(new AveragesHandler()), new CourseTopicGate(new WhoNeedsHelpHandler()), new NavigationHandler(),
                 new FallbackHandler()));
     }
 
