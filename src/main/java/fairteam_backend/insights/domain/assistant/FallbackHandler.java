@@ -6,6 +6,6 @@ import java.util.Optional;
 final class FallbackHandler implements IntentHandler {
     @Override
     public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
-        return Optional.of(AssistantReply.say("fallback", "No estoy seguro de haberte entendido. Prueba con algo como: “¿quién viene bajando?” o “crea un quiz de funciones”."));
+        return Optional.of(AssistantReply.say("fallback", "No pude responderte esta vez. Inténtalo de nuevo en un momento; mientras tanto puedo decirte “¿quién viene bajando?” o crear “un quiz de funciones”."));
     }
 }
