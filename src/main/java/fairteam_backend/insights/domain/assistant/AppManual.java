@@ -118,7 +118,7 @@ public final class AppManual {
         add("tipo-trabajo", "Tipo de trabajo según la materia", "tipo de trabajo|area|codigo|programacion|tipo de actividad|ejercicios guiados",
                 "En Talleres, \"Tipo de trabajo\" muestra solo lo que tiene sentido para tu área (problemas, análisis de fuentes, ensayo, laboratorio, código…). Detecto el área por el nombre del curso y la puedes cambiar.",
                 "talleres", null, "crear", null);
-        add("variantes", "Versión de refuerzo o reto", "variante|otro nivel|version de refuerzo|version de reto|mas dificil|mas facil",
+        add("variantes", "Versión de refuerzo o reto", "variante|otro nivel|version de refuerzo|version de reto|version mas dificil|version mas facil",
                 "Con un taller abierto, en \"Misma actividad para otro nivel\" toca Refuerzo, Seguimiento o Reto: conserva el tema y cambia la dificultad.",
                 "talleres", null, null, null);
         add("descargar-taller", "Descargar o imprimir un taller", "descarga taller|imprime taller|hoja estudiante|clave docente|pdf taller|imprimir",

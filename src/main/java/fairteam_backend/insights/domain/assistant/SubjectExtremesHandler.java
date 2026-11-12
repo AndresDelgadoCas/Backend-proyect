@@ -12,6 +12,8 @@ final class SubjectExtremesHandler implements IntentHandler {
     @Override
     public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
         if (!q.has("tema", "temas", "materia")) return Optional.empty();
+        // "¿Qué estudiante va peor en esta materia?" asks about people: the course is "la materia".
+        if (WorstStudentsHandler.aboutStudents(q)) return Optional.empty();
         boolean easiest = q.has("facil", "mejor", "mas alto");
         boolean hardest = q.has("dificil", "cuesta", "peor", "mas bajo", "flojo");
         List<SubjectAverage> subjects = c.analysis().subjects();
