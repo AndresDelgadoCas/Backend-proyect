@@ -11,7 +11,7 @@ Fields:
 
 - `file`: required PDF, DOCX, or TXT file; maximum size 10 MB.
 - `subject`: required subject name, up to 120 characters.
-- `targetLevel`: `LOW`, `MEDIUM`, or `HIGH` (Spanish aliases are accepted).
+- `targetLevel`: `LOW`, `MEDIUM`, or `HIGH`.
 - `learningObjective`: optional instruction describing the learning goal.
 
 ## AI service endpoint

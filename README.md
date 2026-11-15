@@ -1,193 +1,193 @@
 # FairTeam Backend
 
-API REST para acompañamiento académico docente. Gestiona estudiantes y calificaciones, y conecta de forma privada con un servicio separado que genera talleres a partir del material de clase.
+REST API for academic support for teachers. It manages students and grades, and connects privately to a separate service that generates workshops from class material.
 
-## Tecnologías
+## Technologies
 
-- Java 21, Spring Boot, Spring Data JPA y PostgreSQL.
-- Spring Security con cuentas propias, contraseñas BCrypt y JWT firmado.
-- Flyway para cambios aditivos y aislamiento de datos por docente.
-- Servicio de IA Python/Gemini separado; la clave Gemini solo vive en ese servicio.
+- Java 21, Spring Boot, Spring Data JPA and PostgreSQL.
+- Spring Security with own accounts, BCrypt passwords and signed JWTs.
+- Flyway for additive changes and per-teacher data isolation.
+- Separate Python/Gemini AI service; the Gemini key lives only in that service.
 
-## Configuración local
+## Local setup
 
-Necesitas Java 21 y una base PostgreSQL con el esquema inicial de FairTeam. Flyway toma como baseline el esquema existente (versión 0), luego crea las tablas de evaluación y aplica aislamiento por cuenta con Row Level Security. El primer docente registrado recibe los datos académicos preexistentes; cada registro posterior inicia con un espacio vacío y separado. Hibernate valida el esquema (`ddl-auto=validate`).
+You need Java 21 and a PostgreSQL database with the initial FairTeam schema. Flyway takes the existing schema as its baseline (version 0), then creates the evaluation tables and applies per-account isolation with Row Level Security. The first registered teacher receives the pre-existing academic data; every later registration starts with an empty, separate workspace. Hibernate validates the schema (`ddl-auto=validate`).
 
-Configura estas variables antes de iniciar la API:
+Set these variables before starting the API:
 
-| Variable | Uso |
+| Variable | Purpose |
 |---|---|
-| `SPRING_DATASOURCE_URL` | URL JDBC de PostgreSQL |
-| `SPRING_DATASOURCE_USERNAME` / `SPRING_DATASOURCE_PASSWORD` | Credenciales de PostgreSQL |
-| `JWT_SECRET` | Secreto aleatorio de al menos 32 caracteres para firmar sesiones |
-| `AI_SERVICE_URL` | URL del servicio de IA, por defecto `http://localhost:8000` |
-| `AI_SERVICE_TOKEN` | Secreto compartido entre backend y servicio de IA |
+| `SPRING_DATASOURCE_URL` | PostgreSQL JDBC URL |
+| `SPRING_DATASOURCE_USERNAME` / `SPRING_DATASOURCE_PASSWORD` | PostgreSQL credentials |
+| `JWT_SECRET` | Random secret of at least 32 characters used to sign sessions |
+| `AI_SERVICE_URL` | AI service URL, `http://localhost:8000` by default |
+| `AI_SERVICE_TOKEN` | Secret shared between the backend and the AI service |
 
-En PowerShell puedes crear valores locales con:
+In PowerShell you can create local values with:
 
 ```powershell
 $env:JWT_SECRET = [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(48))
 ```
 
-No uses esos ejemplos en producción ni guardes secretos en Git. En Render configura `JWT_SECRET` y las variables de conexión/IA desde el panel **Environment**. El registro público no necesita invitación.
+Do not use those examples in production and do not store secrets in Git. On Render, set `JWT_SECRET` and the connection/AI variables from the **Environment** panel. Public registration does not need an invitation.
 
-Inicia y compila localmente:
+Run and build locally:
 
 ```powershell
 .\mvnw.cmd spring-boot:run
 .\mvnw.cmd -DskipTests package
 ```
 
-## Autenticación
+## Authentication
 
-- `POST /api/auth/register`: crea una cuenta docente; requiere `name`, `email` y `password` (mínimo 10 caracteres).
-- `POST /api/auth/login`: recibe `email` y `password`.
-- `GET /api/auth/me`: confirma la sesión del token.
-- Las demás rutas requieren `Authorization: Bearer <accessToken>`; el token vence a las 8 horas.
+- `POST /api/auth/register`: creates a teacher account; requires `name`, `email` and `password` (minimum 10 characters).
+- `POST /api/auth/login`: takes `email` and `password`.
+- `GET /api/auth/me`: confirms the token's session.
+- All other routes require `Authorization: Bearer <accessToken>`; the token expires after 8 hours.
 
-Ejemplo de inicio:
+Login example:
 
 ```json
-{"email":"docente@institucion.edu","password":"tu-contraseña"}
+{"email":"teacher@school.edu","password":"your-password"}
 ```
 
-El registro está abierto. Las migraciones V2 y V5 aplican el aislamiento por docente y organizan los datos existentes en un curso inicial; cada docente mantiene sus propios cursos y listas mediante Row Level Security de PostgreSQL.
+Registration is open. Migrations V2 and V5 apply per-teacher isolation and organize existing data into an initial course; each teacher keeps their own courses and lists through PostgreSQL Row Level Security.
 
-## Rutas principales
+## Main routes
 
-| Recurso | Rutas |
+| Resource | Routes |
 |---|---|
-| Cursos | `/api/courses` (CRUD) |
-| Estudiantes | `/api/students`, `/api/students/import?courseId={id}` |
-| Notas e importación CSV | `/api/grades?courseId={id}`, `/api/grades/import?courseId={id}` |
-| Asignaturas | `/api/subjects` |
-| Actividades y entregas | `/api/assignments`, `/api/assignment-submissions` |
-| Rúbricas | `/api/grading-rubrics`, `/api/rubric-criteria` |
-| Revisión asistida | `/api/ai-evaluations` |
-| Taller desde material | `POST /api/ai/workshops/generate` |
+| Courses | `/api/courses` (CRUD) |
+| Students | `/api/students`, `/api/students/import?courseId={id}` |
+| Grades and CSV import | `/api/grades?courseId={id}`, `/api/grades/import?courseId={id}` |
+| Subjects | `/api/subjects` |
+| Assignments and submissions | `/api/assignments`, `/api/assignment-submissions` |
+| Rubrics | `/api/grading-rubrics`, `/api/rubric-criteria` |
+| Assisted review | `/api/ai-evaluations` |
+| Workshop from material | `POST /api/ai/workshops/generate` |
 
-La lista de estudiantes acepta CSV `name,email,academicLevel` (`name` obligatorio). Para importar notas dentro de un curso, usa `studentName` o `studentEmail`, `subject`, `grade` y `period`; también están disponibles los campos de ID para integraciones anteriores. Las materias se crean si no existen. La migración V5 organiza los registros existentes por docente en un curso inicial.
+The student list accepts a CSV with `name,email,academicLevel` (`name` is required). To import grades into a course, use `studentName` or `studentEmail`, `subject`, `grade` and `period`; the ID fields are still available for earlier integrations. Subjects are created if they do not exist. Migration V5 organizes existing records into an initial course per teacher.
 
-Para crear un taller se envía `multipart/form-data` con `file` (PDF, DOCX o TXT), `subject`, `targetLevel`, y opcionalmente `learningObjective` y `learningContext` (máximo 2500 caracteres). El contexto solo incluye recuentos, promedio y tema priorizado del curso; no se envían nombres ni notas individuales a Gemini. La llamada tiene límite de tiempo y presenta un mensaje útil si el proveedor rechaza la clave, cuota o modelo.
+To create a workshop, send `multipart/form-data` with `file` (PDF, DOCX or TXT), `subject`, `targetLevel`, and optionally `learningObjective` and `learningContext` (maximum 2500 characters). The context only includes counts, the average and the prioritized topic of the course; no individual names or grades are sent to Gemini. The call has a time limit and shows a useful message if the provider rejects the key, quota or model.
 
-## Patrones de diseño
+## Design patterns
 
-El backend conserva ejemplos concretos de Strategy (`strategy/`), Adapter (`adapter/`), Factory Method (`entity/factory/`), Observer (`observer/`), Decorator (`decorator/`) y Proxy (`material/`, ver [docs/proxy-pattern.md](docs/proxy-pattern.md)). El análisis de equipos compone Strategy y Decorator; los cambios académicos notifican observadores.
+The backend keeps concrete examples of Strategy (`strategy/`), Adapter (`adapter/`), Factory Method (`entity/factory/`), Observer (`observer/`), Decorator (`decorator/`) and Proxy (`material/`, see [docs/proxy-pattern.md](docs/proxy-pattern.md)). Team analysis composes Strategy and Decorator; academic changes notify observers.
 
-La integración de talleres usa una frontera hexagonal: `AiWorkshopService` valida el caso de uso y depende del puerto `application/port/out/AiWorkshopPort`; `adapter/out/ai/AiWorkshopHttpAdapter` traduce ese puerto al protocolo HTTP del servicio Gemini. El controlador REST es el adaptador de entrada y se conserva la ruta pública existente.
+The workshop integration uses a hexagonal boundary: `AiWorkshopService` validates the use case and depends on the port `application/port/out/AiWorkshopPort`; `adapter/out/ai/AiWorkshopHttpAdapter` translates that port to the HTTP protocol of the Gemini service. The REST controller is the input adapter and the existing public route is kept.
 
-El proyecto todavía es mayoritariamente por capas; no es correcto describir todo el backend como hexagonal ya. La adopción se hace por módulos para evitar mover todas las entidades y APIs de una vez. Spring administra los servicios con alcance singleton, pero no se presenta como un Singleton manual. `RestClient.builder()` es uso de un builder de biblioteca, no un patrón Builder del dominio. No se encontró Abstract Factory ni Bridge en el código actual; no se agregan sin una segunda familia de proveedores o abstracciones que justifiquen su complejidad.
+The project is still mostly layered; it would be wrong to describe the whole backend as hexagonal already. Adoption happens module by module to avoid moving every entity and API at once. Spring manages services with singleton scope, but that is not presented as a hand-written Singleton. `RestClient.builder()` is use of a library builder, not a domain Builder pattern. No Abstract Factory or Bridge was found in the current code; they are not added without a second family of providers or abstractions that justify their complexity.
 
-## Despliegue
+## Deployment
 
-Render debe usar Java 21 y configurar secretos y datos de conexión desde variables de entorno. Las migraciones presuponen que las tablas base `students` y `subjects` ya existen. La V5 conserva los estudiantes y las notas existentes dentro de un curso inicial por docente. Flyway aplica estas migraciones al iniciar; conserva una copia de seguridad de producción antes del despliegue.
+Render must use Java 21 and configure secrets and connection data from environment variables. The migrations assume the base tables `students` and `subjects` already exist. V5 keeps existing students and grades inside an initial course per teacher. Flyway applies these migrations at startup; keep a production backup before deploying.
 
-## Módulo `insights`: el cerebro del asistente docente
+## `insights` module: the teacher assistant's brain
 
-Documentación detallada: [arquitectura y patrones](docs/insights-architecture.md) · [API](docs/api-insights.md).
+Detailed documentation: [architecture and patterns](docs/insights-architecture.md) · [API](docs/api-insights.md).
 
-Arquitectura hexagonal dentro de `fairteam_backend.insights`:
+Hexagonal architecture inside `fairteam_backend.insights`:
 
-| Capa | Paquete | Contenido |
+| Layer | Package | Contents |
 |---|---|---|
-| Dominio (Java puro) | `insights.domain` | `CourseAnalyzer` (niveles, tendencias por corte, promedio por tema), `GradeProjector` y `GradingScheme` (nota necesaria para aprobar), `Briefing` (resumen hablado), `FeedbackTemplate` (mensajes), `assistant` (intérprete del Búho) |
-| Aplicación | `insights.application` | Puertos de entrada (`CourseInsightsUseCase`, `DraftFeedbackUseCase`, `AskAssistantUseCase`), puertos de salida (`CourseDataPort`, `GradingSchemePort`) y `CourseInsightsService` |
-| Adaptadores | `insights.adapter` | `CourseInsightsController` (REST) y adaptadores JPA sobre los repositorios existentes |
-| Composición | `insights.config` | `InsightsConfiguration` elige las implementaciones |
+| Domain (pure Java) | `insights.domain` | `CourseAnalyzer` (levels, per-period trends, average per topic), `GradeProjector` and `GradingScheme` (grade needed to pass), `Briefing` (spoken summary), `FeedbackTemplate` (messages), `assistant` (the Búho interpreter) |
+| Application | `insights.application` | Input ports (`CourseInsightsUseCase`, `DraftFeedbackUseCase`, `AskAssistantUseCase`), output ports (`CourseDataPort`, `GradingSchemePort`) and `CourseInsightsService` |
+| Adapters | `insights.adapter` | `CourseInsightsController` (REST) and JPA adapters over the existing repositories |
+| Composition | `insights.config` | `InsightsConfiguration` chooses the implementations |
 
-Patrones de diseño aplicados:
+Design patterns applied:
 
-- **Strategy**: `RiskScoringStrategy` / `TrendWeightedRiskStrategy` calcula el riesgo 0–100 (promedio + tendencia).
-- **Chain of Responsibility**: `AssistantEngine` pasa la pregunta por `IntentHandler`s (resumen, quién baja, qué nota necesita, crear quiz, escribir mensaje…); agregar una habilidad es agregar una clase.
-- **Template Method + Factory Method**: `FeedbackTemplate.forTone()` crea `WarmFeedback` o `FormalFeedback`; la estructura del mensaje es fija y cada tono define saludo y despedida.
-- **Builder**: `Briefing` arma el resumen frase por frase, solo con lo que tiene algo que decir.
-- **Ports & Adapters**: el dominio y el servicio no importan Spring ni JPA; se prueban con puertos falsos (`CourseInsightsTest`).
+- **Strategy**: `RiskScoringStrategy` / `TrendWeightedRiskStrategy` computes the 0–100 risk (average + trend).
+- **Chain of Responsibility**: `AssistantEngine` passes the question through `IntentHandler`s (summary, who is dropping, what grade is needed, create quiz, write message…); adding a skill means adding a class.
+- **Template Method + Factory Method**: `FeedbackTemplate.forTone()` creates `WarmFeedback` or `FormalFeedback`; the message structure is fixed and each tone defines the greeting and the closing.
+- **Builder**: `Briefing` assembles the summary sentence by sentence, only with what has something to say.
+- **Ports & Adapters**: the domain and the service do not import Spring or JPA; they are tested with fake ports (`CourseInsightsTest`).
 
-Endpoints (todos protegidos por JWT y Row Level Security):
+Endpoints (all protected by JWT and Row Level Security):
 
-- `GET /api/courses/{id}/insights`: análisis, esquema de notas, proyecciones y resumen del día.
-- `PUT /api/courses/{id}/grading-scheme`: `{ "weights": [30, 30, 40], "passingGrade": 3.0 }` (tabla `course_grading_schemes`, migración V7).
-- `GET /api/courses/{id}/students/{studentId}/feedback?tone=cercano|formal`: mensaje de retroalimentación.
-- `POST /api/courses/{id}/assistant`: `{ "question": "¿Quién viene bajando?" }` → texto, estudiantes y acciones.
+- `GET /api/courses/{id}/insights`: analysis, grading scheme, projections and the day's summary.
+- `PUT /api/courses/{id}/grading-scheme`: `{ "weights": [30, 30, 40], "passingGrade": 3.0 }` (table `course_grading_schemes`, migration V7).
+- `GET /api/courses/{id}/students/{studentId}/feedback?tone=friendly|formal|motivational`: feedback message.
+- `POST /api/courses/{id}/assistant`: `{ "question": "¿Quién viene bajando?" }` → text, students and actions.
 
-## Asistencia y acompañamiento
+## Attendance and support
 
-- `GET|PUT /api/courses/{id}/attendance?date=AAAA-MM-DD`: marcas de la sesión (`PRESENT`, `ABSENT`, `LATE`, `EXCUSED`).
-  Un PUT con lista vacía borra la sesión; no se aceptan fechas futuras.
-- `GET /api/courses/{id}/attendance/sessions` y `/summary`: fechas registradas y porcentaje de asistencia por estudiante.
-  Quien asiste a menos del 80 % (con al menos 4 sesiones) queda marcado, y el Búho lo combina con las notas.
-- `GET|POST /api/courses/{id}/students/{sid}/interventions` y `DELETE .../{interventionId}`: registro de apoyos
-  (conversación, tutoría, taller, mensaje, familia, otro) con una nota breve.
+- `GET|PUT /api/courses/{id}/attendance?date=YYYY-MM-DD`: marks for the session (`PRESENT`, `ABSENT`, `LATE`, `EXCUSED`).
+  A PUT with an empty list clears the session; future dates are not accepted.
+- `GET /api/courses/{id}/attendance/sessions` and `/summary`: recorded dates and attendance percentage per student.
+  Anyone attending less than 80 % (with at least 4 sessions) is flagged, and Búho combines that with grades.
+- `GET|POST /api/courses/{id}/students/{sid}/interventions` and `DELETE .../{interventionId}`: log of support actions
+  (conversation, tutoring, workshop, message, family, other) with a short note.
 
-## Editor de notas y alta rápida
+## Grade editor and quick add
 
-Cada curso tiene su escala (`courses.max_grade`: 5, 10, 20, 100…). Las notas se guardan siempre de 0 a 5 con
-cuatro decimales (87,5/100 se guarda como 4,375) y el editor, el asistente y las importaciones hablan en la
-escala del curso. La nota mínima para aprobar es la misma proporción en cualquier escala (3,0/5 = 60/100).
+Each course has its own scale (`courses.max_grade`: 5, 10, 20, 100…). Grades are always stored from 0 to 5 with
+four decimals (87.5/100 is stored as 4.375) and the editor, the assistant and the imports speak in the
+course's scale. The minimum passing grade is the same proportion on any scale (3.0/5 = 60/100).
 
-- `GET /api/courses/{id}/grade-sheet?period=Corte 2`: el corte como tabla (estudiantes × columnas), con
-  `maxGrade`, `passingGrade`, el porcentaje de cada columna y el peso de cada corte (`periodWeights`). Sin
-  `period` abre el último corte. Un corte nuevo sin columnas propone las del corte anterior (`suggested: true`).
-- `PUT /api/courses/{id}/grade-sheet` con `{ period, changes: [{ studentId, subjectId, grade }], columns:
-  [{ subjectId, weight }] }`: guarda todo en una transacción; `grade: null` borra la nota. `columns` es opcional
-  y fija el orden y los porcentajes del corte: todos `null` (mismo peso) o todos con valor sumando 100 %.
-- `PUT /api/courses/{id}/grade-sheet/columns/{subjectId}?period=` con `{ name }`: renombra una columna del corte
-  (sus notas y su porcentaje pasan a la actividad con el nuevo nombre). `DELETE` la elimina con sus notas.
-- `PUT /api/courses/{id}/grading-scale` con `{ maxGrade }`: cambia la escala; las notas conservan su
-  proporción (un 4,0/5 pasa a verse como 80/100).
-- `POST /api/courses/{id}/students/quick` con `{ text }`: una línea por estudiante, con correo opcional
-  separado por `;`, `,` o tabulación (como al copiar de Excel). Los repetidos se informan y no se crean.
+- `GET /api/courses/{id}/grade-sheet?period=Corte 2`: the period as a table (students × columns), with
+  `maxGrade`, `passingGrade`, the percentage of each column and the weight of each period (`periodWeights`). Without
+  `period` it opens the latest period. A new period without columns proposes those of the previous period (`suggested: true`).
+- `PUT /api/courses/{id}/grade-sheet` with `{ period, changes: [{ studentId, subjectId, grade }], columns:
+  [{ subjectId, weight }] }`: saves everything in one transaction; `grade: null` deletes the grade. `columns` is optional
+  and sets the order and percentages of the period: all `null` (same weight) or all with a value adding up to 100 %.
+- `PUT /api/courses/{id}/grade-sheet/columns/{subjectId}?period=` with `{ name }`: renames a column of the period
+  (its grades and percentage move to the activity with the new name). `DELETE` removes it along with its grades.
+- `PUT /api/courses/{id}/grading-scale` with `{ maxGrade }`: changes the scale; grades keep their
+  proportion (a 4.0/5 is shown as 80/100).
+- `POST /api/courses/{id}/students/quick` with `{ text }`: one line per student, with an optional email
+  separated by `;`, `,` or a tab (as when copying from Excel). Duplicates are reported and not created.
 
-El promedio de un corte pondera las columnas calificadas con sus porcentajes (las pendientes no cuentan) y la
-definitiva pondera los cortes con el esquema del curso (`PUT /grading-scheme`), que también calcula cuánto
-necesita cada estudiante en lo que falta.
+A period's average weights the graded columns by their percentages (pending ones do not count) and the
+final grade weights the periods with the course scheme (`PUT /grading-scheme`), which also computes how much
+each student needs in what remains.
 
-## Rúbricas
+## Rubrics
 
-Rúbricas analíticas por curso (`rubrics/`): criterios con peso y cuatro niveles descritos (Excelente, Bueno,
-Básico, Insuficiente). Cada nivel vale una parte fija de la nota máxima (100 %, 80 %, 60 % y 30 %), así que
-"Básico" en todo es exactamente la nota para aprobar en cualquier escala.
+Analytic rubrics per course (`rubrics/`): criteria with weights and four described levels (Excellent, Good,
+Basic, Insufficient). Each level is worth a fixed share of the maximum grade (100 %, 80 %, 60 % and 30 %), so
+"Basic" on everything is exactly the passing grade on any scale.
 
-- `POST /api/courses/{id}/rubrics/generate` con `{ activity, criteriaCount, teacherPrompt }`: borrador hecho por la
-  IA (no se guarda hasta que el docente lo revisa).
-- `POST /api/courses/{id}/rubrics` y `PUT /{rubricId}`: guarda la rúbrica; los pesos deben sumar 100 %.
-- `PUT /{rubricId}/students/{studentId}` con `{ levels: { criterionId: 0..3 }, comment }`: evalúa a un estudiante.
-- `POST /{rubricId}/publish` con `{ period, columnName }`: lleva las notas de quienes tienen todos los criterios
-  evaluados a una columna del libro de notas (usa `GradeSheetService`, así que también avisa a los observadores).
+- `POST /api/courses/{id}/rubrics/generate` with `{ activity, criteriaCount, teacherPrompt }`: draft made by the
+  AI (not saved until the teacher reviews it).
+- `POST /api/courses/{id}/rubrics` and `PUT /{rubricId}`: saves the rubric; the weights must add up to 100 %.
+- `PUT /{rubricId}/students/{studentId}` with `{ levels: { criterionId: 0..3 }, comment }`: evaluates a student.
+- `POST /{rubricId}/publish` with `{ period, columnName }`: moves the grades of those with every criterion
+  evaluated into a gradebook column (uses `GradeSheetService`, so it also notifies the observers).
 
-Tablas `course_rubrics`, `course_rubric_criteria`, `course_rubric_scores` y `course_rubric_comments` (migración V10),
-aisladas por docente con RLS como el resto.
+Tables `course_rubrics`, `course_rubric_criteria`, `course_rubric_scores` and `course_rubric_comments` (migration V10),
+isolated per teacher with RLS like the rest.
 
-## Tipos de taller
+## Workshop types
 
-Las rutas de generación aceptan `activityStyles` (hasta tres de `GUIDED`, `CODE`, `APP`, `DEPLOY`, `CASE`, `TEAM`).
-El servicio de IA adapta las actividades: código con casos de prueba, aplicaciones con historias de usuario,
-despliegues con URL pública como evidencia, casos de estudio o proyectos por roles.
+The generation routes accept `activityStyles` (up to three of `GUIDED`, `CODE`, `APP`, `DEPLOY`, `CASE`, `TEAM`).
+The AI service adapts the activities: code with test cases, applications with user stories,
+deployments with a public URL as evidence, case studies or role-based projects.
 
-`teacherPrompt` (hasta 2000 caracteres) lleva las indicaciones del docente. Con `generationType=CUSTOM` el taller
-se arma a partir de ellas y el material es opcional: `POST /api/courses/{id}/materials/generate-workshop` sin
-`materialIds`. Los campos llegan como un `WorkshopRequestDTO` (Parameter Object) desde el controlador hasta el
-adaptador de IA. La respuesta trae además `studentIntro`, `teacherNotes` y, por actividad, `goal`, `hints` y
+`teacherPrompt` (up to 2000 characters) carries the teacher's instructions. With `generationType=CUSTOM` the workshop
+is built from them and the material is optional: `POST /api/courses/{id}/materials/generate-workshop` without
+`materialIds`. The fields travel as a `WorkshopRequestDTO` (Parameter Object) from the controller to the
+AI adapter. The response also carries `studentIntro`, `teacherNotes` and, per activity, `goal`, `hints` and
 `deliverable`.
 
-## Cursos de demostración
+## Demo courses
 
-`POST /api/demo/workspace` (con sesión) crea en la cuenta del docente cuatro cursos ficticios de tres semestres:
-Programación Orientada a Objetos (2025-2), Estructuras de Datos (2026-1), Patrones de Diseño y Bases de Datos I
-(2026-2, todavía en curso). Cada uno trae estudiantes distintos (92 en total), notas por tema y corte con perfiles
-variados (buen progreso, estable, mejorando, bajando y en riesgo), su esquema de cortes y dos PDF de material de clase
-redactados a partir de fuentes abiertas citadas en cada documento. Volver a llamarlo no duplica nada. En la interfaz
-está como "Cargar cursos de demostración" en Inicio, Mis cursos y Ajustes.
+`POST /api/demo/workspace` (with a session) creates in the teacher's account four fictional courses across three semesters:
+Object-Oriented Programming (2025-2), Data Structures (2026-1), Design Patterns and Databases I
+(2026-2, still in progress). Each has different students (92 in total), grades per topic and period with varied profiles
+(good progress, steady, improving, dropping and at risk), its period scheme and two PDFs of class material
+written from open sources cited in each document. Calling it again does not duplicate anything. In the interface
+it appears as "Cargar cursos de demostración" on Home, My courses and Settings.
 
-## Base de datos nueva
+## New database
 
-El callback de Flyway `db/migration/beforeMigrate.sql` crea las tablas académicas originales cuando la base está vacía
-y no hace nada en una base existente. Así el backend arranca tanto en la base anterior como en una base nueva de Render.
+The Flyway callback `db/migration/beforeMigrate.sql` creates the original academic tables when the database is empty
+and does nothing on an existing database. That way the backend starts on both the previous database and a new Render database.
 
-## Pruebas
+## Tests
 
 ```bash
 ./mvnw test -Dtest='!FairteamBackendApplicationTests' -Dsurefire.failIfNoSpecifiedTests=false
 ```
 
-Las pruebas unitarias no necesitan base de datos: el dominio y el servicio de `insights` se prueban con puertos en memoria, los controladores con MockMvc y los adaptadores JPA con Mockito. `FairteamBackendApplicationTests` levanta el contexto completo y requiere PostgreSQL. GitHub Actions corre las pruebas en cada push (`.github/workflows/ci.yml`).
+The unit tests need no database: the `insights` domain and service are tested with in-memory ports, the controllers with MockMvc and the JPA adapters with Mockito. `FairteamBackendApplicationTests` starts the full context and requires PostgreSQL. GitHub Actions runs the tests on every push (`.github/workflows/ci.yml`).

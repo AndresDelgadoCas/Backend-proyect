@@ -1,25 +1,25 @@
-# Patrón Proxy: material de clase
+# Proxy pattern: class material
 
-El Proxy es un patrón **estructural** que pone un intermediario entre el cliente y un objeto para
-controlar el acceso a él. En FairTeam lo usamos con el material de clase (PDF, DOCX o TXT de hasta
-10 MB) que el docente sube para generar talleres con IA.
+Proxy is a **structural** pattern that puts an intermediary between the client and an object to
+control access to it. In FairTeam we use it for class material (PDF, DOCX or TXT up to
+10 MB) that the teacher uploads to generate workshops with AI.
 
-## El problema
+## The problem
 
-Antes, cada vez que el backend necesitaba un material cargaba la entidad completa, con el archivo:
+Before, every time the backend needed a material it loaded the whole entity, including the file:
 
-- para **borrarlo** leía hasta 10 MB que nunca usaba;
-- al **generar un taller** con seis materiales leía hasta 60 MB *antes* de validar el nivel o el tema,
-  aunque la solicitud terminara rechazada;
-- generar varios talleres seguidos con el mismo PDF lo leía de PostgreSQL **cada vez**.
+- to **delete** it, it read up to 10 MB it never used;
+- when **generating a workshop** with six materials it read up to 60 MB *before* validating the level or topic,
+  even if the request ended up rejected;
+- generating several workshops in a row with the same PDF read it from PostgreSQL **every time**.
 
-## La solución, igual que en la clase
+## The solution, as in class
 
-| Clase (red social) | FairTeam | Rol |
+| Class (social network) | FairTeam | Role |
 | --- | --- | --- |
-| `SocialMediaProfile` | `material/MaterialContent` | Sujeto: interfaz común |
-| `RealProfile` | `material/StoredMaterialContent` | Sujeto real: el archivo ya leído |
-| `ProfileProxy` | `material/MaterialContentProxy` | Proxy: controla el acceso |
+| `SocialMediaProfile` | `material/MaterialContent` | Subject: common interface |
+| `RealProfile` | `material/StoredMaterialContent` | Real subject: the file already read |
+| `ProfileProxy` | `material/MaterialContentProxy` | Proxy: controls access |
 
 ```mermaid
 classDiagram
@@ -43,46 +43,46 @@ classDiagram
     }
     MaterialContent <|.. StoredMaterialContent
     MaterialContent <|.. MaterialContentProxy
-    MaterialContentProxy --> StoredMaterialContent : crea cuando se necesita
-    MaterialContentProxy --> MaterialContentCache : reutiliza
-    MaterialContentProvider ..> MaterialContentProxy : entrega
-    StoredMaterialMultipartFile --> MaterialContent : usa
+    MaterialContentProxy --> StoredMaterialContent : creates when needed
+    MaterialContentProxy --> MaterialContentCache : reuses
+    MaterialContentProvider ..> MaterialContentProxy : hands out
+    StoredMaterialMultipartFile --> MaterialContent : uses
 ```
 
 ```java
-// ProfileProxy de la clase                         // MaterialContentProxy en FairTeam
+// ProfileProxy from class                          // MaterialContentProxy in FairTeam
 public void viewProfile() {                         public synchronized byte[] bytes() {
     if (realProfile == null) {                          if (real == null) {
-        realProfile = new RealProfile(username);            real = cache.get(id).orElseGet(() -> /* lee de BD */);
+        realProfile = new RealProfile(username);            real = cache.get(id).orElseGet(() -> /* read from DB */);
     }                                                   }
     realProfile.viewProfile();                          return real.bytes();
 }                                                   }
 ```
 
-## Las tres ventajas vistas en clase
+## The three advantages seen in class
 
-- **Carga diferida (lazy loading):** el proxy se crea solo con los metadatos (nombre, tipo, tamaño).
-  El archivo se lee la primera vez que alguien llama a `bytes()`. Por eso `StoredMaterialMultipartFile`
-  responde nombre, tamaño y `isEmpty()` sin tocar el archivo, y la validación rechaza una solicitud
-  inválida antes de leer ningún PDF.
-- **Control de acceso:** `MaterialContentProvider.forCourse(courseId, materialId)` solo entrega un proxy
-  si la consulta de metadatos encuentra el material en ese curso. Esa consulta pasa por la seguridad
-  por filas de PostgreSQL, así que un docente nunca obtiene el material de otro (responde 404).
-- **Caché:** los archivos leídos quedan en `MaterialContentCache`, un LRU limitado por bytes (40 MB por
-  defecto, `fairteam.materials.cache-bytes`). El control de acceso se hace siempre antes de usar la caché,
-  y borrar un material lo saca de ella.
+- **Lazy loading:** the proxy is created with metadata only (name, type, size).
+  The file is read the first time someone calls `bytes()`. That is why `StoredMaterialMultipartFile`
+  answers name, size and `isEmpty()` without touching the file, and validation rejects an
+  invalid request before reading any PDF.
+- **Access control:** `MaterialContentProvider.forCourse(courseId, materialId)` only hands out a proxy
+  if the metadata query finds the material in that course. That query goes through PostgreSQL's
+  row-level security, so a teacher never gets another teacher's material (it answers 404).
+- **Cache:** files that were read stay in `MaterialContentCache`, an LRU bounded by bytes (40 MB by
+  default, `fairteam.materials.cache-bytes`). Access control always happens before the cache is used,
+  and deleting a material removes it from the cache.
 
-## Desventajas, y cómo se tienen en cuenta
+## Disadvantages, and how they are handled
 
-- **Más complejidad:** son cuatro clases pequeñas en un solo paquete (`material/`) y el resto del
-  backend solo conoce la interfaz `MaterialContent`.
-- **Sobrecarga:** la consulta de metadatos se hace siempre; es una fila sin el archivo, mucho más barata
-  que la lectura que evita.
-- **Diseño adicional:** el repositorio separa `findMetadataByIdAndCourseId` (barata) de
-  `findContentByIdAndCourseId` (solo el archivo), para que el proxy pueda pedir cada cosa por separado.
+- **More complexity:** four small classes in a single package (`material/`) and the rest of the
+  backend only knows the `MaterialContent` interface.
+- **Overhead:** the metadata query always runs; it is one row without the file, much cheaper
+  than the read it avoids.
+- **Additional design:** the repository separates `findMetadataByIdAndCourseId` (cheap) from
+  `findContentByIdAndCourseId` (the file only), so the proxy can ask for each one separately.
 
-## Pruebas
+## Tests
 
-`MaterialContentProxyTest`, `MaterialContentCacheTest`, `MaterialContentProviderTest` y
-`StoredMaterialMultipartFileTest` comprueban que los metadatos no cargan el archivo, que se lee una sola
-vez, que la caché se comparte entre proxies y respeta su límite, y que un material de otro curso da 404.
+`MaterialContentProxyTest`, `MaterialContentCacheTest`, `MaterialContentProviderTest` and
+`StoredMaterialMultipartFileTest` check that metadata does not load the file, that it is read only
+once, that the cache is shared between proxies and respects its limit, and that a material from another course gives 404.

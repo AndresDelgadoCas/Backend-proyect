@@ -1,24 +1,24 @@
-# Módulo `insights`: arquitectura
+# `insights` module: architecture
 
-El asistente docente (análisis del curso, simulador de notas, mensajes y el Búho) está construido con **puertos y adaptadores**.
+The teacher assistant (course analysis, grade simulator, messages and Búho) is built with **ports and adapters**.
 
 ```mermaid
 flowchart LR
-  subgraph Entrada
+  subgraph Input
     REST[CourseInsightsController<br/>TeacherOverviewController]
   end
-  subgraph Aplicación
+  subgraph Application
     UC[CourseInsightsUseCase<br/>DraftFeedbackUseCase<br/>AskAssistantUseCase<br/>TeacherOverviewUseCase]
     S[CourseInsightsService]
   end
-  subgraph Dominio
+  subgraph Domain
     A[CourseAnalyzer] --> R[RiskScoringStrategy]
     P[GradeProjector]
     B[Briefing builder]
     F[FeedbackTemplate]
     E[AssistantEngine] --> H[IntentHandler x24]
   end
-  subgraph Salida
+  subgraph Output
     CD[CourseDataPort] --> JPA[JpaCourseDataAdapter]
     GS[GradingSchemePort] --> JPA2[JpaGradingSchemeAdapter]
   end
@@ -29,20 +29,20 @@ flowchart LR
   JPA2 --> DB
 ```
 
-## Patrones
+## Patterns
 
-| Patrón | Dónde | Por qué |
+| Pattern | Where | Why |
 |---|---|---|
-| Strategy | `RiskScoringStrategy` (`TrendWeightedRiskStrategy`, `GradeOnlyRiskStrategy`) | La fórmula del riesgo se elige por configuración (`fairteam.insights.risk`) sin tocar el analizador. |
-| Chain of Responsibility | `AssistantEngine` + `IntentHandler` | Cada habilidad del Búho es una clase; el orden de la cadena decide la prioridad. |
-| Template Method | `FeedbackTemplate` (`WarmFeedback`, `FormalFeedback`, `EncouragingFeedback`) | La estructura del mensaje es fija; cada tono cambia saludo y despedida. |
-| Factory Method | `FeedbackTemplate.forTone` | El cliente pide un tono, no una clase concreta. |
-| Builder | `Briefing` | El resumen se arma paso a paso y solo agrega frases con algo que decir. |
-| Ports & Adapters | `application.port.in/out`, `adapter.in/out` | El dominio y el servicio no dependen de Spring ni de JPA y se prueban con puertos en memoria. |
+| Strategy | `RiskScoringStrategy` (`TrendWeightedRiskStrategy`, `GradeOnlyRiskStrategy`) | The risk formula is chosen by configuration (`fairteam.insights.risk`) without touching the analyzer. |
+| Chain of Responsibility | `AssistantEngine` + `IntentHandler` | Each Búho skill is a class; the order of the chain decides priority. |
+| Template Method | `FeedbackTemplate` (`WarmFeedback`, `FormalFeedback`, `EncouragingFeedback`) | The message structure is fixed; each tone changes the greeting and the closing. |
+| Factory Method | `FeedbackTemplate.forTone` | The client asks for a tone, not for a concrete class. |
+| Builder | `Briefing` | The summary is assembled step by step and only adds sentences that have something to say. |
+| Ports & Adapters | `application.port.in/out`, `adapter.in/out` | The domain and the service do not depend on Spring or JPA and are tested with in-memory ports. |
 
-## Cómo agregar una habilidad al Búho
+## How to add a skill to Búho
 
-1. Crea `MiIntencionHandler implements IntentHandler` en `insights.domain.assistant`.
-2. Devuelve `Optional.empty()` si la pregunta no es para ti.
-3. Regístralo en `AssistantEngine.standard()` en el lugar de la cadena que le corresponda.
-4. Agrega `MiIntencionHandlerTest` usando `AssistantFixture`.
+1. Create `MyIntentHandler implements IntentHandler` in `insights.domain.assistant`.
+2. Return `Optional.empty()` if the question is not for you.
+3. Register it in `AssistantEngine.standard()` at the right place in the chain.
+4. Add `MyIntentHandlerTest` using `AssistantFixture`.

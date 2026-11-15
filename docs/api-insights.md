@@ -1,26 +1,26 @@
-# API del asistente docente
+# Teacher assistant API
 
-Todas las rutas requieren `Authorization: Bearer <token>`. La base de datos aplica Row Level Security: un curso de otra cuenta responde 404.
+All routes require `Authorization: Bearer <token>`. The database applies Row Level Security: a course from another account answers 404.
 
-| Método | Ruta | Respuesta |
+| Method | Route | Response |
 |---|---|---|
-| GET | `/api/courses/{id}/insights` | `analysis` (resumen, cortes, temas, estudiantes con nivel, tendencia, riesgo y distribución), `scheme`, `projections`, `briefing` |
-| GET | `/api/courses/{id}/insights/report.csv` | Reporte de seguimiento en CSV (separado por punto y coma) |
-| PUT | `/api/courses/{id}/grading-scheme` | Cuerpo `{ "weights": [30, 30, 40], "passingGrade": 3.0 }`. 400 si los pesos no suman 100 |
-| GET | `/api/courses/{id}/students/{studentId}/feedback?tone=cercano\|formal\|motivador` | `{ subject, body, email, tone }` |
-| POST | `/api/courses/{id}/assistant` | Cuerpo `{ "question": "¿Quién viene bajando?" }` → `{ text, intent, items, actions, run }` |
-| GET | `/api/insights/overview` | Un resumen por cada curso del docente |
+| GET | `/api/courses/{id}/insights` | `analysis` (summary, periods, topics, students with level, trend, risk and distribution), `scheme`, `projections`, `briefing` |
+| GET | `/api/courses/{id}/insights/report.csv` | Follow-up report as CSV (semicolon-separated) |
+| PUT | `/api/courses/{id}/grading-scheme` | Body `{ "weights": [30, 30, 40], "passingGrade": 3.0 }`. 400 if the weights do not add up to 100 |
+| GET | `/api/courses/{id}/students/{studentId}/feedback?tone=friendly\|formal\|motivational` | `{ subject, body, email, tone }` |
+| POST | `/api/courses/{id}/assistant` | Body `{ "question": "¿Quién viene bajando?" }` → `{ text, intent, items, actions, run }` |
+| GET | `/api/insights/overview` | One summary per course of the teacher |
 
-## Acciones del Búho
+## Búho actions
 
-`actions` y `run` usan `kind` + `params` de texto:
+`actions` and `run` use a text `kind` + `params`:
 
-| kind | params | Qué hace el frontend |
+| kind | params | What the frontend does |
 |---|---|---|
-| `navigate` | `route`, opcional `vista`, `filtro` | Abre una pantalla |
-| `workshop` | `mode` (workshop/quiz), `level`, `topic`, `studentId` | Abre Talleres con el formulario listo |
-| `review` | `studentId` | Abre la ficha del estudiante |
-| `message` | `studentId` | Abre el mensaje redactado |
-| `report` | — | Genera el informe del curso |
-| `briefing` | — | Lee el resumen del día |
-| `course` | `courseId` | Cambia de curso |
+| `navigate` | `route`, optional `view`, `filter` | Opens a screen |
+| `workshop` | `mode` (workshop/quiz), `level`, `topic`, `studentId` | Opens Workshops with the form ready |
+| `review` | `studentId` | Opens the student's profile |
+| `message` | `studentId` | Opens the drafted message |
+| `report` | — | Generates the course report |
+| `briefing` | — | Reads the day's summary |
+| `course` | `courseId` | Switches course |
