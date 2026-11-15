@@ -12,4 +12,7 @@ public interface AskAssistantUseCase {
     default AssistantReply ask(long courseId, String question, String teacherName, List<Turn> history) {
         return ask(courseId, question, teacherName);
     }
+
+    /** For an account with no course yet: how-to answers, greetings and general help still work. */
+    AssistantReply askWithoutCourse(String question, String teacherName, List<Turn> history);
 }

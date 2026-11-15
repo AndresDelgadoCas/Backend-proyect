@@ -103,8 +103,8 @@ public final class AppManual {
                 "En Estudiantes y notas abre \"Asistencia\": elige la fecha, marca Presente, Falta, Tarde o Excusa (o \"Todos presentes\") y toca \"Guardar asistencia\". Te aviso cuando alguien falta seguido.",
                 "estudiantes", "asistencia", "asistencia", null);
         // Workshops
-        add("taller", "Crear un taller", "crea taller|hacer taller|genera taller|taller con ia|actividad con ia|prepara taller",
-                "En Talleres y quizzes elige \"Taller\", escribe el tema y, si quieres, indicaciones (\"en parejas\", \"con un caso real\"). Elige el nivel y el material (opcional) y toca \"Crear taller\". Queda guardado. O pídemelo y lo hago yo.",
+        add("taller", "Crear un taller", "crea taller|hacer taller|genera taller|taller con ia|actividad con ia|prepara taller|creo un taller|genero un taller|hago un taller|taller y lo descarg|taller y descarg",
+                "En Talleres y quizzes elige \"Taller\", escribe el tema y, si quieres, indicaciones (\"en parejas\", \"con un caso real\"). Elige el nivel y el material (opcional) y toca \"Crear taller\". Queda guardado. Para llevártelo, ábrelo y toca \"Para estudiantes\" (la hoja sin respuestas) o \"Clave docente\" (con respuestas): se abre lista para imprimir o guardar como PDF. O pídemelo y lo hago yo.",
                 "talleres", null, "crear", ReplyAction.of("workshop", "Hazlo por mí", "mode", "workshop", "level", "MEDIUM", "auto", "true"));
         add("quiz", "Crear un quiz", "crea quiz|hacer quiz|genera quiz|evaluacion corta|crea examen|prepara examen|hacer examen",
                 "En Talleres y quizzes elige \"Quiz\", escribe el tema y toca \"Crear quiz\": de 5 a 8 preguntas con su clave de respuestas. O pídemelo y lo hago yo.",
@@ -144,7 +144,7 @@ public final class AppManual {
         add("equipos", "Armar equipos", "equipo|grupos de trabajo|arma grupo|forma grupo|proyecto",
                 "En Equipos crea un proyecto (\"Nuevo proyecto\"), elige cuántas personas por equipo y quiénes participan, y toca \"Proponer equipos\": mezclo niveles para que queden parejos. Revisa y guarda en el proyecto.",
                 "equipos", null, "proyecto", null);
-        add("seguimiento", "Seguimiento del curso", "seguimiento|riesgo|tendencia|mapa por tema|alerta",
+        add("seguimiento", "Seguimiento del curso", "seguimiento|riesgo|tendencia|mapa por tema|alerta|quien necesita|necesita apoyo|necesita ayuda|necesitan apoyo|necesitan ayuda|quien va mal|quien viene bajando|donde veo quien|quien esta mal",
                 "Seguimiento tiene cuatro vistas: Prioridades (quién necesita apoyo), Tendencia (quién sube o baja entre cortes), Mapa por tema y Simulador. También sacas el informe PDF o el CSV.",
                 "seguimiento", null, null, null);
         add("simulador", "Simular la nota final", "simula|cuanto necesita|proyeccion|para pasar|peso de corte|peso del corte",
@@ -178,7 +178,7 @@ public final class AppManual {
         add("tutorial", "Tutorial", "tutorial|primeros pasos|recorrido|guia|aprender a usar|como se usa|como funciona la app|como funciona la plataforma",
                 "En Ajustes tienes \"Primeros pasos\" (te acompaño mientras haces cada cosa) y el \"Recorrido rápido\" (solo te muestro las secciones). Te abro Primeros pasos.",
                 "ajustes", null, "primeros-pasos", ReplyAction.of("guide", "Abrir Primeros pasos"));
-        add("privacidad", "Privacidad de los datos", "privacidad|datos personales|seguridad|quien ve|nombres a la ia|se envia",
+        add("privacidad", "Privacidad de los datos", "privacidad|datos personales|seguridad|quien puede ver|quien ve mis|nombres a la ia|se envia",
                 "Tus cursos solo los ves tú. A la IA le envío el material y un resumen del curso; a mí me llegan los estudiantes como códigos, sin nombres, correos ni notas individuales.",
                 "ajustes", null, null, null);
     }

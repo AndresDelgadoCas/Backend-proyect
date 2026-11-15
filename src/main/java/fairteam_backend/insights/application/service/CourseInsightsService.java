@@ -169,6 +169,18 @@ public class CourseInsightsService implements CourseInsightsUseCase, DraftFeedba
     }
 
     @Override
+    public AssistantReply askWithoutCourse(String question, String teacherName, List<Turn> history) {
+        CourseAnalysis none = analyzer.analyze(0, AssistantContext.NO_COURSE, List.of(), List.of());
+        AssistantContext context = new AssistantContext(teacherName, none, Map.of(), 0, courseData.courses(), "", Map.of()).withConversation(List.of(), history);
+        AssistantReply rules = assistant.answer(question, context);
+        if (!AssistantBrief.worthInterpreting(question, rules, context)) return rules;
+        AssistantBrief brief = new AssistantBrief(context);
+        return interpreter.interpret(brief.request(question))
+                .flatMap(understood -> brief.reply(understood, rewritten -> assistant.answer(rewritten, context)))
+                .orElse(rules);
+    }
+
+    @Override
     public List<CourseOverview> overview() {
         List<CourseOverview> rows = new ArrayList<>();
         for (var course : courseData.courses()) {

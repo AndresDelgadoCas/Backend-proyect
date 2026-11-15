@@ -71,4 +71,15 @@ class HowToHandlerTest {
         assertThat(AppManual.text()).contains("[porcentajes] Porcentajes de las columnas", "[llevar-libro]");
         assertThat(AppManual.entries()).extracting(AppManual.HowTo::id).doesNotHaveDuplicates();
     }
+
+    @Test
+    void whereToSeeWhoNeedsSupportPointsToSeguimientoNotPrivacy() {
+        AssistantContext c = AssistantFixture.context();
+        assertThat(AppManual.find(AssistantFixture.query("donde veo quien necesita apoyo", c)).map(AppManual.HowTo::id)).contains("seguimiento");
+    }
+
+    @Test
+    void generatingAndDownloadingAWorkshopIsOneAnswer() {
+        assertThat(AppManual.find(AssistantFixture.query("como genero un taller y lo descargo", AssistantFixture.context())).map(AppManual.HowTo::id)).contains("taller");
+    }
 }

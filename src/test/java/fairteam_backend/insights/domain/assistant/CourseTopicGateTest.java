@@ -27,4 +27,12 @@ class CourseTopicGateTest {
         assertThat(engine.answer("hola mi vida", ctx).intent()).isEqualTo("small-talk");
         assertThat(engine.answer("hoal brother", ctx).intent()).isEqualTo("small-talk");
     }
+
+    @Test
+    void anAccountWithoutCoursesStillGetsHowToAnswers() {
+        var none = new AssistantContext("Ana", new fairteam_backend.insights.domain.CourseAnalyzer(new fairteam_backend.insights.domain.risk.TrendWeightedRiskStrategy()).analyze(0, AssistantContext.NO_COURSE, List.of(), List.of()),
+                java.util.Map.of(), 0, List.of(), "");
+        assertThat(engine.answer("como creo un curso", none).intent()).isNotEqualTo("no-course");
+        assertThat(engine.answer("quien necesita ayuda", none).intent()).isEqualTo("no-course");
+    }
 }

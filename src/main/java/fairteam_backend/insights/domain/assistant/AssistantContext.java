@@ -15,6 +15,9 @@ public record AssistantContext(String teacher, CourseAnalysis analysis, Map<Long
         int materials, List<CourseRef> courses, String briefing, Map<Long, AttendanceStats> attendance,
         List<ActivityRef> activities, List<Turn> history) {
 
+    /** Name of the placeholder course used when the account has none yet. */
+    public static final String NO_COURSE = "Sin curso";
+
     public AssistantContext {
         attendance = attendance == null ? Map.of() : Map.copyOf(attendance);
         activities = activities == null ? List.of() : List.copyOf(activities);
