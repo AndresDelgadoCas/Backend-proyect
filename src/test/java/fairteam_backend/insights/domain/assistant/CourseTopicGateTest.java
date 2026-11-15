@@ -37,6 +37,16 @@ class CourseTopicGateTest {
     }
 
     @Test
+    void withoutCoursesGeneralAndAdviceQuestionsReachTheAiAndFairteamIsExplained() {
+        var none = new AssistantContext("Ana", new fairteam_backend.insights.domain.CourseAnalyzer(new fairteam_backend.insights.domain.risk.TrendWeightedRiskStrategy()).analyze(0, AssistantContext.NO_COURSE, List.of(), List.of()),
+                java.util.Map.of(), 0, List.of(), "");
+        assertThat(engine.answer("como funciona fairteam", none).intent()).isEqualTo("how-to");
+        assertThat(engine.answer("que es un patron observer", none).intent()).isEqualTo("fallback");
+        assertThat(engine.answer("dame consejos para motivar estudiantes", none).intent()).isEqualTo("fallback");
+        assertThat(engine.answer("hola", none).text()).doesNotContain("Sin curso");
+    }
+
+    @Test
     void whenTheAiIsDownAUnderstoodTopicStillGetsTheClosestGuide() {
         AssistantReply fallback = engine.answer("cuantos planetas tiene el sistema solar", ctx);
         assertThat(engine.degrade("cuantos planetas tiene el sistema solar", fallback, ctx).intent()).isEqualTo("fallback");

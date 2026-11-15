@@ -175,6 +175,9 @@ public final class AppManual {
         add("atajos", "Atajos de teclado", "atajo|teclado|tecla",
                 "Pulsa ? para ver los atajos. \"g\" y una letra te lleva a una sección: g i Inicio, g e Estudiantes, g s Seguimiento, g t Talleres, g r Rúbricas, g q Equipos, g c Cursos. Ctrl K me abre.",
                 "ajustes", null, null, null);
+        add("que-es", "Qué es FairTeam", "que es fairteam|como funciona fairteam|para que sirve fairteam|que hace fairteam|como funciona el sistema|como funciona la web|de que se trata|que puedo hacer aqui",
+                "FairTeam te ayuda a saber a quién apoyar en cada curso. Creas un curso, importas tu lista y tus notas desde Excel, y te muestro quién necesita refuerzo, quién viene bajando y en qué tema. Con tu material armo talleres, quizzes y rúbricas que tú revisas antes de usar, y también te ayudo con equipos, asistencia y mensajes. Pregúntame lo que quieras, de la plataforma o de cualquier otro tema.",
+                "inicio", null, null, null);
         add("tutorial", "Tutorial", "tutorial|primeros pasos|recorrido|guia|aprender a usar|como se usa|como funciona la app|como funciona la plataforma",
                 "En Ajustes tienes \"Primeros pasos\" (te acompaño mientras haces cada cosa) y el \"Recorrido rápido\" (solo te muestro las secciones). Te abro Primeros pasos.",
                 "ajustes", null, "primeros-pasos", ReplyAction.of("guide", "Abrir Primeros pasos"));
