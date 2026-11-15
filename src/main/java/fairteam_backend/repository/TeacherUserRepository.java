@@ -11,4 +11,8 @@ public interface TeacherUserRepository
         extends JpaRepository<TeacherUser, Long> {
 
     Optional<TeacherUser> findByEmail(String email);
+
+    long countByRole(String role);
+
+    long countByRoleAndActive(String role, Boolean active);
 }

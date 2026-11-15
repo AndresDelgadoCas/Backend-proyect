@@ -46,10 +46,28 @@ public class TenantIsolationFilter extends OncePerRequestFilter {
             return;
         }
 
+        // A deactivated account loses access immediately, even with a token that has not expired yet.
+        java.util.List<String> roles = jdbcTemplate.queryForList(
+                "SELECT role FROM teacher_users WHERE id = ? AND active", String.class, teacherId);
+        if (roles.isEmpty()) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Cuenta desactivada o sesión no válida.");
+            return;
+        }
+        // The administrator flag comes from the database, never from the token alone, and only
+        // admin routes get the read-only cross-account policy.
+        boolean adminRequest = requestPath.startsWith("/api/admin/") && "ADMIN".equals(roles.get(0));
+        if (requestPath.startsWith("/api/admin/") && !adminRequest) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Solo para administradores.");
+            return;
+        }
+
         try {
             transactionTemplate.executeWithoutResult(status -> {
                 jdbcTemplate.queryForObject("SELECT set_config('app.teacher_id', ?, true)", String.class,
                         Long.toString(teacherId));
+                if (adminRequest) {
+                    jdbcTemplate.queryForObject("SELECT set_config('app.admin', 'true', true)", String.class);
+                }
                 try {
                     filterChain.doFilter(request, response);
                 } catch (IOException | ServletException exception) {

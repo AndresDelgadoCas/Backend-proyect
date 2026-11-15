@@ -28,6 +28,7 @@ public class TeacherAuthService {
     private final JwtEncoder jwtEncoder;
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private final JdbcTemplate jdbcTemplate;
+    private final LoginThrottle throttle = new LoginThrottle();
 
     public TeacherAuthService(TeacherUserRepository users, JwtEncoder jwtEncoder, JdbcTemplate jdbcTemplate) {
         this.users = users;
@@ -43,7 +44,8 @@ public class TeacherAuthService {
         if (users.findByEmail(normalizedEmail).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe una cuenta con ese correo.");
         }
-        boolean firstAccount = users.count() == 0;
+        // Administrators do not own legacy data, so only the first teacher claims it.
+        boolean firstAccount = users.countByRole("TEACHER") == 0;
         TeacherUser user = new TeacherUser();
         user.setFullName(name.trim());
         user.setEmail(normalizedEmail);
@@ -57,14 +59,21 @@ public class TeacherAuthService {
         return issue(saved);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public AuthResult login(String email, String password) {
-        TeacherUser user = users.findByEmail(normalizeEmail(email))
-                .filter(TeacherUser::getActive)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Correo o contraseña incorrectos."));
-        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+        String key = normalizeEmail(email);
+        if (throttle.isBlocked(key)) {
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
+                    "Demasiados intentos fallidos. Espera unos minutos e inténtalo de nuevo.");
+        }
+        TeacherUser user = users.findByEmail(key).filter(TeacherUser::getActive).orElse(null);
+        if (user == null || !passwordEncoder.matches(password, user.getPasswordHash())) {
+            throttle.recordFailure(key);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Correo o contraseña incorrectos.");
         }
+        throttle.reset(key);
+        user.setLastLoginAt(java.time.LocalDateTime.now());
+        users.save(user);
         return issue(user);
     }
 
@@ -77,11 +86,11 @@ public class TeacherAuthService {
                 .expiresAt(now.plus(8, ChronoUnit.HOURS))
                 .claim("email", user.getEmail())
                 .claim("name", user.getFullName())
-                .claim("roles", List.of("TEACHER"))
+                .claim("roles", List.of(user.getRole()))
                 .build();
         String token = jwtEncoder.encode(JwtEncoderParameters.from(
                 JwsHeader.with(MacAlgorithm.HS256).build(), claims)).getTokenValue();
-        return new AuthResult(token, user.getId(), user.getFullName(), user.getEmail(), "TEACHER");
+        return new AuthResult(token, user.getId(), user.getFullName(), user.getEmail(), user.getRole());
     }
 
     private String normalizeEmail(String email) {

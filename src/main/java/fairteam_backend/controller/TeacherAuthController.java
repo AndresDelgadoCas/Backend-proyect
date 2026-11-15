@@ -40,7 +40,8 @@ public class TeacherAuthController {
     @GetMapping("/me")
     public Map<String, String> me(@AuthenticationPrincipal Jwt jwt, Authentication authentication) {
         return Map.of("id", jwt.getSubject(), "email", jwt.getClaimAsString("email"),
-                "name", jwt.getClaimAsString("name"), "role", "TEACHER");
+                "name", jwt.getClaimAsString("name"),
+                "role", authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")) ? "ADMIN" : "TEACHER");
     }
 
     public record RegisterRequest(@NotBlank @Size(max = 120) String name,

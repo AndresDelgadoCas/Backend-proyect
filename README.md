@@ -53,6 +53,25 @@ Login example:
 
 Registration is open. Migrations V2 and V5 apply per-teacher isolation and organize existing data into an initial course; each teacher keeps their own courses and lists through PostgreSQL Row Level Security.
 
+## Super administrator
+
+An account with the `ADMIN` role can see every account on the platform and manage access. Create it by setting these variables on the server (never in Git):
+
+| Variable | Purpose |
+|---|---|
+| `ADMIN_EMAIL` | Email of the administrator account |
+| `ADMIN_PASSWORD` | Password, at least 12 characters |
+| `ADMIN_NAME` | Optional display name |
+| `ADMIN_PASSWORD_RESET` | `true` to replace the password of an existing administrator on the next start |
+
+At startup the account is created, or promoted if that email already exists (its password is replaced by the configured one). Routes live under `/api/admin` and require the `ADMIN` role, which is re-checked in the database on every request:
+
+- `GET /api/admin/overview`, `/accounts`, `/accounts/{id}`, `/audit`, `/system`.
+- `PATCH /api/admin/accounts/{id}` with `{ active, role }`: deactivating an account ends its sessions immediately. An administrator cannot deactivate themselves and the last active administrator cannot be removed.
+- `POST /api/admin/accounts/{id}/reset-password`: returns a one-time temporary password (not available for other administrators).
+
+Administrators read data across accounts through a read-only row level security policy (`fairteam_admin_read`, migration V13); they cannot modify a teacher's academic data. Every change is stored in `admin_audit_log`. Sign-in is limited to 5 failed attempts per email in 15 minutes.
+
 ## Main routes
 
 | Resource | Routes |

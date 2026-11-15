@@ -37,6 +37,9 @@ public class TeacherUser {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "last_login_at")
+    private LocalDateTime lastLoginAt;
+
     public TeacherUser() {
     }
 
@@ -101,5 +104,13 @@ public class TeacherUser {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getLastLoginAt() {
+        return lastLoginAt;
+    }
+
+    public void setLastLoginAt(LocalDateTime lastLoginAt) {
+        this.lastLoginAt = lastLoginAt;
     }
 }
