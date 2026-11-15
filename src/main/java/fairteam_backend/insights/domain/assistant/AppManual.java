@@ -210,6 +210,21 @@ public final class AppManual {
         return Optional.ofNullable(best);
     }
 
+    /** Loose match for when the AI is unavailable: the entry sharing the most meaningful words with the question (at least two). */
+    static Optional<HowTo> closest(AssistantQuery q) {
+        java.util.Set<String> generic = java.util.Set.of("cuantos", "cuantas", "tiene", "tienen", "sistema", "puedo", "quiero", "necesito", "hacer", "donde", "cuando", "porque", "sobre", "ahora");
+        List<String> words = java.util.Arrays.stream(q.text().split(" ")).filter(w -> w.length() >= 5 && !generic.contains(w)).toList();
+        HowTo best = null;
+        int bestScore = 2;
+        for (HowTo entry : ENTRIES) {
+            String haystack = AssistantQuery.normalize(entry.title() + " " + entry.answer());
+            int score = 0;
+            for (String w : words) if (haystack.contains(w.length() > 6 ? w.substring(0, w.length() - 1) : w)) score++;
+            if (score > bestScore) { best = entry; bestScore = score; }
+        }
+        return Optional.ofNullable(best);
+    }
+
     /** A compact copy for the AI interpreter: title, then the steps. */
     public static String text() {
         StringBuilder out = new StringBuilder();

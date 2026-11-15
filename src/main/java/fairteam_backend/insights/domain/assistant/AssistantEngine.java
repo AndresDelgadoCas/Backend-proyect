@@ -16,6 +16,18 @@ public class AssistantEngine {
                 new FallbackHandler()));
     }
 
+    /** Used when the AI interpreter could not answer: the closest manual entry is better than a plain apology. */
+    public AssistantReply degrade(String question, AssistantReply rules, AssistantContext context) {
+        if (!"fallback".equals(rules.intent())) return rules;
+        AssistantQuery query = AssistantQuery.parse(question, context);
+        return AppManual.closest(query)
+                .map(entry -> {
+                    AssistantReply how = HowToHandler.reply(entry, query, context);
+                    return AssistantReply.say("how-to", "No pude consultar a la IA ahora, pero esto puede servirte. " + how.text()).withActions(how.actions().toArray(ReplyAction[]::new));
+                })
+                .orElse(rules);
+    }
+
     public AssistantReply answer(String question, AssistantContext context) {
         AssistantQuery query = AssistantQuery.parse(question, context);
         if (query.text().isEmpty()) return AssistantReply.say("empty", "¿En qué te ayudo?");

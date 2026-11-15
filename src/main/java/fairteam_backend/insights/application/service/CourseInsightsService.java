@@ -164,7 +164,7 @@ public class CourseInsightsService implements CourseInsightsUseCase, DraftFeedba
             AssistantBrief brief = new AssistantBrief(context);
             return interpreter.interpret(brief.request(question))
                     .flatMap(understood -> brief.reply(understood, rewritten -> assistant.answer(rewritten, context)))
-                    .orElse(rules);
+                    .orElseGet(() -> assistant.degrade(question, rules, context));
         }
     }
 
@@ -177,7 +177,7 @@ public class CourseInsightsService implements CourseInsightsUseCase, DraftFeedba
         AssistantBrief brief = new AssistantBrief(context);
         return interpreter.interpret(brief.request(question))
                 .flatMap(understood -> brief.reply(understood, rewritten -> assistant.answer(rewritten, context)))
-                .orElse(rules);
+                .orElseGet(() -> assistant.degrade(question, rules, context));
     }
 
     @Override

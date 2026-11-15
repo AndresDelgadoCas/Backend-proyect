@@ -33,6 +33,11 @@ public class AiAssistantInterpreterAdapter implements AssistantInterpreterPort {
     public Optional<Interpretation> interpret(AssistantBrief.Request request) {
         if (token == null || token.isBlank()) return Optional.empty();
         long started = System.nanoTime();
+        Optional<Interpretation> first = attempt(request, started);
+        return first.isPresent() ? first : attempt(request, started);
+    }
+
+    private Optional<Interpretation> attempt(AssistantBrief.Request request, long started) {
         try {
             Interpretation result = aiRestClient.post()
                     .uri("/assistant/interpret")

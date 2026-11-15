@@ -35,4 +35,12 @@ class CourseTopicGateTest {
         assertThat(engine.answer("como creo un curso", none).intent()).isNotEqualTo("no-course");
         assertThat(engine.answer("quien necesita ayuda", none).intent()).isEqualTo("no-course");
     }
+
+    @Test
+    void whenTheAiIsDownAUnderstoodTopicStillGetsTheClosestGuide() {
+        AssistantReply fallback = engine.answer("cuantos planetas tiene el sistema solar", ctx);
+        assertThat(engine.degrade("cuantos planetas tiene el sistema solar", fallback, ctx).intent()).isEqualTo("fallback");
+        AssistantReply rules = engine.answer("necesito pasar mis notas desde un archivo excel", ctx);
+        assertThat(engine.degrade("necesito pasar mis notas desde un archivo excel", rules, ctx).text()).isNotBlank();
+    }
 }
