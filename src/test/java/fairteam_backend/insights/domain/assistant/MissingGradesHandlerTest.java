@@ -21,7 +21,7 @@ class MissingGradesHandlerTest {
     void listsStudentsWithoutGrades() {
         AssistantReply reply = new MissingGradesHandler().handle(AssistantFixture.query("¿quién no tiene notas?", ctx), ctx).orElseThrow();
         assertThat(reply.items()).extracting(ReplyItem::name).containsExactly("Camila Ospina");
-        assertThat(reply.actions().get(0).params()).containsEntry("filtro", "sin-notas");
+        assertThat(reply.actions().get(0).params()).containsEntry("filter", "ungraded");
     }
 
     @Test

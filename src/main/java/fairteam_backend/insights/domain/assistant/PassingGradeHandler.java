@@ -14,7 +14,7 @@ final class PassingGradeHandler implements IntentHandler {
     @Override
     public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
         if (!q.has("que nota", "cuanto debe", "cuanto necesita", "cuanto le falta", "necesita para", "necesita sacar", "para pasar", "para aprobar", "alcanza", "pierde", "perder", "aprueba", "gana el")) return Optional.empty();
-        ReplyAction simulator = ReplyAction.of("navigate", "Abrir simulador", "route", "seguimiento", "vista", "simulador");
+        ReplyAction simulator = ReplyAction.of("navigate", "Abrir simulador", "route", "follow-up", "view", "simulator");
         if (q.student() != null) {
             StudentPerformance s = q.student();
             GradeProjection p = c.projections().get(s.student().id());

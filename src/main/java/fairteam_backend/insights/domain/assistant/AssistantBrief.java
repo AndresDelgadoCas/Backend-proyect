@@ -103,7 +103,7 @@ public final class AssistantBrief {
             case "review_student" -> student == null ? null : AssistantReply.say("ai-review", orElse(text, "Te abro la ficha de " + first(student) + "."))
                     .andRun(ReplyAction.of("review", "Ver a " + first(student), "studentId", id(student)));
             case "open_section" -> AssistantReply.say("ai-navigate", orElse(text, "Te llevo allá."))
-                    .andRun(ReplyAction.of("navigate", "Abrir", "route", i.section().isBlank() ? "inicio" : i.section()));
+                    .andRun(ReplyAction.of("navigate", "Abrir", "route", i.section().isBlank() ? "home" : i.section()));
             case "switch_course" -> Optional.ofNullable(courses.get(i.course())).map(c -> AssistantReply.say("ai-course", orElse(text, "Abro " + c.name() + "."))
                     .andRun(ReplyAction.of("course", "Abrir " + c.name(), "courseId", String.valueOf(c.id())))).orElse(null);
             case "report" -> AssistantReply.say("ai-report", orElse(text, "Genero el informe del curso.")).andRun(ReplyAction.of("report", "Informe del curso"));

@@ -19,7 +19,7 @@ class AttendanceHandlerTest {
     void invitesToTakeRollWhenThereIsNoData() {
         AssistantReply reply = new AttendanceHandler().handle(AssistantFixture.query("¿quién ha faltado?", base), base).orElseThrow();
         assertThat(reply.text()).contains("Aún no has tomado asistencia");
-        assertThat(reply.actions().get(0).params()).containsEntry("vista", "asistencia");
+        assertThat(reply.actions().get(0).params()).containsEntry("view", "attendance");
     }
 
     @Test

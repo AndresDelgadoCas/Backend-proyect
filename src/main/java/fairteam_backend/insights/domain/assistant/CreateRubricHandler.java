@@ -15,7 +15,7 @@ final class CreateRubricHandler implements IntentHandler {
         if (!q.has("rubrica")) return Optional.empty();
         if (!q.has("crea", "genera", "prepara", "haz", "hazme", "arma", "disena", "quiero", "necesito", "nueva", "evaluar", "calificar")) {
             return Optional.of(AssistantReply.say("create-rubric", "Las rúbricas están en su propia sección: ahí las creas, evalúas a cada estudiante con un clic por criterio y llevas las notas al libro.")
-                    .andRun(ReplyAction.of("navigate", "Abrir rúbricas", "route", "rubricas")));
+                    .andRun(ReplyAction.of("navigate", "Abrir rúbricas", "route", "rubrics")));
         }
         String target = q.has("quiz", "examen", "prueba", "evaluacion") ? "quiz" : "workshop";
         String noun = target.equals("quiz") ? "quiz" : "taller";

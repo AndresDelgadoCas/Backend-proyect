@@ -98,7 +98,7 @@ class CourseInsightsControllerTest {
         mvc.perform(get("/api/courses/1/students/1/feedback").param("tone", "formal"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.tone").value("FORMAL"));
         mvc.perform(get("/api/courses/1/students/1/feedback").param("tone", "motivador"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.tone").value("MOTIVADOR"));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.tone").value("MOTIVATIONAL"));
         mvc.perform(get("/api/courses/1/students/77/feedback")).andExpect(status().isNotFound());
     }
 }

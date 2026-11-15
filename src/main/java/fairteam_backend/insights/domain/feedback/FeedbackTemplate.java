@@ -20,7 +20,7 @@ public abstract class FeedbackTemplate {
     public static FeedbackTemplate forTone(FeedbackTone tone) {
         return switch (tone) {
             case FORMAL -> new FormalFeedback();
-            case MOTIVADOR -> new EncouragingFeedback();
+            case MOTIVATIONAL -> new EncouragingFeedback();
             default -> new WarmFeedback();
         };
     }

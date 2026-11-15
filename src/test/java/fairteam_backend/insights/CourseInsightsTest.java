@@ -85,7 +85,7 @@ class CourseInsightsTest {
         assertThat(insights.briefing()).startsWith("Buenas tardes, Sebastián.").contains("Ojo: 2 estudiantes vienen bajando");
         assertThat(insights.scheme().weights()).containsExactly(30, 30, 40);
         assertThat(insights.scheme().periods()).containsExactly("Corte 1", "Corte 2", "Corte 3");
-        var message = service.draft(1, 1, FeedbackTone.CERCANO, "Sebastián Granda");
+        var message = service.draft(1, 1, FeedbackTone.FRIENDLY, "Sebastián Granda");
         assertThat(message.body()).startsWith("Hola, Valentina:").contains("ha bajado").contains("Ciclos y condicionales").endsWith("Sebastián Granda");
         assertThat(service.draft(1, 1, FeedbackTone.FORMAL, "S").body()).startsWith("Estimado(a) Valentina Rojas Díaz:");
         assertThatThrownBy(() -> service.insights(99, "x")).isInstanceOf(CourseNotFoundException.class);

@@ -13,9 +13,9 @@ class GuideProgressServiceTest {
 
     @Test
     void keepsOnlyKnownFieldsAndSteps() {
-        var body = json.readTree("{\"open\":true,\"minimized\":\"x\",\"done\":[\"curso\",\"curso\",\"hack\",3],\"skipped\":[\"perfil\"],\"extra\":\"<script>\"}");
+        var body = json.readTree("{\"open\":true,\"minimized\":\"x\",\"done\":[\"curso\",\"course\",\"hack\",3],\"skipped\":[\"perfil\"],\"extra\":\"<script>\"}");
         var clean = GuideProgressService.clean(body);
-        assertThat(clean.toString()).isEqualTo("{\"open\":true,\"minimized\":false,\"finished\":false,\"done\":[\"curso\"],\"skipped\":[\"perfil\"]}");
+        assertThat(clean.toString()).isEqualTo("{\"open\":true,\"minimized\":false,\"finished\":false,\"done\":[\"course\"],\"skipped\":[\"profile\"]}");
     }
 
     @Test

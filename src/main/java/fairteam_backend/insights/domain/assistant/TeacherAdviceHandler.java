@@ -27,6 +27,6 @@ final class TeacherAdviceHandler implements IntentHandler {
         String text = "Te recomiendo: " + String.join("; ", steps.subList(0, Math.min(3, steps.size()))) + ".";
         String topic = a.weakestSubject().map(x -> x.name()).orElse(null);
         return Optional.of(AssistantReply.say("teacher-advice", text)
-                .withActions(Handlers.workshop("Preparar refuerzo", "workshop", Level.LOW, topic, null), ReplyAction.of("navigate", "Ver seguimiento", "route", "seguimiento")));
+                .withActions(Handlers.workshop("Preparar refuerzo", "workshop", Level.LOW, topic, null), ReplyAction.of("navigate", "Ver seguimiento", "route", "follow-up")));
     }
 }

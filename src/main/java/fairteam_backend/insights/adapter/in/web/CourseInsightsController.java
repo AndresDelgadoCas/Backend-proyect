@@ -68,7 +68,7 @@ public class CourseInsightsController {
 
     @GetMapping("/students/{studentId}/feedback")
     public DraftFeedbackUseCase.Feedback feedback(@PathVariable long courseId, @PathVariable long studentId,
-            @RequestParam(defaultValue = "cercano") String tone, @AuthenticationPrincipal Jwt jwt) {
+            @RequestParam(defaultValue = "friendly") String tone, @AuthenticationPrincipal Jwt jwt) {
         return feedback.draft(courseId, studentId, FeedbackTone.parse(tone), teacher(jwt));
     }
 

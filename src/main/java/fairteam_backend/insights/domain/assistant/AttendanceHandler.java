@@ -18,7 +18,7 @@ final class AttendanceHandler implements IntentHandler {
         // "faltan notas" belongs to MissingGradesHandler, which runs earlier in the chain.
         if (c.attendance().isEmpty()) {
             return Optional.of(AssistantReply.say("attendance", "Aún no has tomado asistencia en este curso. Pásala desde Estudiantes y notas y te aviso quién falta seguido.")
-                    .withActions(ReplyAction.of("navigate", "Tomar asistencia", "route", "estudiantes", "vista", "asistencia")));
+                    .withActions(ReplyAction.of("navigate", "Tomar asistencia", "route", "students", "view", "attendance")));
         }
         List<StudentPerformance> flagged = c.analysis().students().stream()
                 .filter(p -> c.attendance().containsKey(p.student().id()) && c.attendance().get(p.student().id()).alert())
@@ -38,6 +38,6 @@ final class AttendanceHandler implements IntentHandler {
                             Grades.plural(a.absent(), "falta", "faltas") + (p.hasGrades() ? " · promedio " + Grades.format(p.average()) : ""),
                             p.hasGrades() && Grades.round1(p.average()) < Grades.PASSING ? "low" : "medium");
                 }).toList())
-                .withActions(ReplyAction.of("navigate", "Ver asistencia", "route", "estudiantes", "vista", "asistencia")));
+                .withActions(ReplyAction.of("navigate", "Ver asistencia", "route", "students", "view", "attendance")));
     }
 }

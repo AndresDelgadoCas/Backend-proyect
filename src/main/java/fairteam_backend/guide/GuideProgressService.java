@@ -21,7 +21,10 @@ import tools.jackson.databind.node.ObjectNode;
  */
 @Service
 public class GuideProgressService {
-    private static final Set<String> STEPS = Set.of("perfil", "curso", "estudiantes", "columnas", "taller", "rubrica", "calificar", "libro", "buho");
+    private static final Set<String> STEPS = Set.of("profile", "course", "students", "columns", "workshop", "rubric", "grade", "gradebook", "buho");
+    /** Progress saved before the English rename used Spanish step ids. */
+    private static final java.util.Map<String, String> LEGACY = java.util.Map.of("perfil", "profile", "curso", "course", "estudiantes", "students", "columnas", "columns",
+            "taller", "workshop", "rubrica", "rubric", "calificar", "grade", "libro", "gradebook");
     private static final JsonMapper JSON = JsonMapper.builder().build();
     private final JdbcTemplate jdbc;
 
@@ -30,7 +33,7 @@ public class GuideProgressService {
     @Transactional(readOnly = true)
     public Optional<JsonNode> get() {
         List<String> rows = jdbc.queryForList("SELECT state::text FROM teacher_guide_progress", String.class);
-        return rows.stream().findFirst().map(JSON::readTree);
+        return rows.stream().findFirst().map(JSON::readTree).map(GuideProgressService::clean);
     }
 
     @Transactional
@@ -55,7 +58,8 @@ public class GuideProgressService {
     private static ArrayNode steps(JsonNode list) {
         ArrayNode out = JSON.createArrayNode();
         if (list.isArray()) for (JsonNode item : list) {
-            String id = item.asString("");
+            String raw = item.asString("");
+            String id = LEGACY.getOrDefault(raw, raw);
             if (STEPS.contains(id) && !contains(out, id)) out.add(id);
         }
         return out;

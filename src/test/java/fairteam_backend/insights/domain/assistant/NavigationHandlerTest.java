@@ -10,8 +10,8 @@ class NavigationHandlerTest {
     @Test
     void answersItsIntent() {
         AssistantReply reply = new NavigationHandler().handle(AssistantFixture.query("abre el simulador", ctx), ctx).orElseThrow();
-        assertThat(reply.run().params()).containsEntry("route", "seguimiento").containsEntry("vista", "simulador");
-        assertThat(new NavigationHandler().handle(AssistantFixture.query("llévame a los ajustes", ctx), ctx).orElseThrow().run().params()).containsEntry("route", "ajustes");
+        assertThat(reply.run().params()).containsEntry("route", "follow-up").containsEntry("view", "simulator");
+        assertThat(new NavigationHandler().handle(AssistantFixture.query("llévame a los ajustes", ctx), ctx).orElseThrow().run().params()).containsEntry("route", "settings");
     }
 
     @Test

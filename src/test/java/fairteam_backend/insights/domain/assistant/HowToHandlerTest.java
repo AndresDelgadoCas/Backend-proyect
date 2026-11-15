@@ -18,33 +18,33 @@ class HowToHandlerTest {
     @Test
     void answersHowToQuestionsAboutTheWholeApp() {
         Map<String, String> bank = Map.ofEntries(
-                Map.entry("¿Cómo creo un curso nuevo?", "crear-curso"),
-                Map.entry("como agrego una materia", "crear-curso"),
-                Map.entry("¿Cómo puedo borrar un curso?", "editar-curso"),
-                Map.entry("¿cómo agrego estudiantes?", "agregar-estudiantes"),
-                Map.entry("¿Cómo importo la lista desde Excel?", "importar-lista"),
-                Map.entry("¿cómo importo las notas de excel?", "importar-notas"),
-                Map.entry("¿Cómo pongo porcentajes a las columnas?", "porcentajes"),
-                Map.entry("¿dónde cambio la escala a sobre 10?", "escala"),
-                Map.entry("¿cómo ordeno las columnas?", "columnas"),
-                Map.entry("¿Cómo saco la nota definitiva?", "cortes"),
-                Map.entry("¿Cómo tomo asistencia?", "asistencia"),
-                Map.entry("¿Cómo puedo crear un taller?", "taller"),
+                Map.entry("¿Cómo creo un curso nuevo?", "create-course"),
+                Map.entry("como agrego una materia", "create-course"),
+                Map.entry("¿Cómo puedo borrar un curso?", "edit-course"),
+                Map.entry("¿cómo agrego estudiantes?", "add-students"),
+                Map.entry("¿Cómo importo la lista desde Excel?", "import-roster"),
+                Map.entry("¿cómo importo las notas de excel?", "import-grades"),
+                Map.entry("¿Cómo pongo porcentajes a las columnas?", "weights"),
+                Map.entry("¿dónde cambio la escala a sobre 10?", "scale"),
+                Map.entry("¿cómo ordeno las columnas?", "columns"),
+                Map.entry("¿Cómo saco la nota definitiva?", "periods"),
+                Map.entry("¿Cómo tomo asistencia?", "attendance"),
+                Map.entry("¿Cómo puedo crear un taller?", "workshop"),
                 Map.entry("como hago un quiz", "quiz"),
                 Map.entry("¿Dónde subo el material del curso?", "material"),
-                Map.entry("¿dónde quedan mis talleres guardados?", "guardados"),
-                Map.entry("¿Cómo hago una rúbrica?", "rubrica"),
-                Map.entry("¿cómo califico con la rúbrica?", "calificar"),
-                Map.entry("¿Cómo paso las notas de la rúbrica al libro?", "llevar-libro"),
-                Map.entry("¿Cómo armo equipos?", "equipos"),
-                Map.entry("¿Cómo pongo el modo oscuro?", "tema-oscuro"),
-                Map.entry("¿Cómo cierro sesión?", "cerrar-sesion"),
-                Map.entry("¿qué atajos de teclado hay?", "atajos"),
+                Map.entry("¿dónde quedan mis talleres guardados?", "saved"),
+                Map.entry("¿Cómo hago una rúbrica?", "rubric"),
+                Map.entry("¿cómo califico con la rúbrica?", "grade"),
+                Map.entry("¿Cómo paso las notas de la rúbrica al libro?", "to-gradebook"),
+                Map.entry("¿Cómo armo equipos?", "teams"),
+                Map.entry("¿Cómo pongo el modo oscuro?", "dark-theme"),
+                Map.entry("¿Cómo cierro sesión?", "sign-out"),
+                Map.entry("¿qué atajos de teclado hay?", "shortcuts"),
                 Map.entry("¿Cómo se usa la app?", "tutorial"),
-                Map.entry("¿la IA ve los nombres de mis estudiantes? ¿qué se envía?", "privacidad"),
-                Map.entry("¿Cómo le escribo un correo a un estudiante?", "mensaje"));
+                Map.entry("¿la IA ve los nombres de mis estudiantes? ¿qué se envía?", "privacy"),
+                Map.entry("¿Cómo le escribo un correo a un estudiante?", "message"));
         var wrong = new java.util.TreeMap<String, String>();
-        bank.forEach((question, id) -> { String got = answer(question); if (!got.equals(id)) wrong.put(question, got + " (esperaba " + id + ")"); });
+        bank.forEach((question, id) -> { String got = answer(question); if (!got.equals(id)) wrong.put(question, got + " (expected " + id + ")"); });
         assertThat(wrong).isEmpty();
     }
 
@@ -61,25 +61,25 @@ class HowToHandlerTest {
         AssistantReply reply = AssistantEngine.standard().answer("¿Cómo creo un quiz?", ctx);
         assertThat(reply.actions()).extracting(ReplyAction::label).containsExactly("Hazlo por mí", "Llévame");
         assertThat(reply.actions().get(0).params()).containsEntry("mode", "quiz").containsEntry("auto", "true").containsKey("topic");
-        assertThat(reply.actions().get(1).params()).containsEntry("route", "talleres").containsEntry("resaltar", "crear");
+        assertThat(reply.actions().get(1).params()).containsEntry("route", "workshops").containsEntry("highlight", "create");
         AssistantReply tutorial = AssistantEngine.standard().answer("¿cómo funciona la app?", ctx);
         assertThat(tutorial.run().kind()).isEqualTo("guide");
     }
 
     @Test
     void theManualIsWhatTheAiReads() {
-        assertThat(AppManual.text()).contains("[porcentajes] Porcentajes de las columnas", "[llevar-libro]");
+        assertThat(AppManual.text()).contains("[weights] Porcentajes de las columnas", "[to-gradebook]");
         assertThat(AppManual.entries()).extracting(AppManual.HowTo::id).doesNotHaveDuplicates();
     }
 
     @Test
-    void whereToSeeWhoNeedsSupportPointsToSeguimientoNotPrivacy() {
+    void whereToSeeWhoNeedsSupportPointsToFollowUpNotPrivacy() {
         AssistantContext c = AssistantFixture.context();
-        assertThat(AppManual.find(AssistantFixture.query("donde veo quien necesita apoyo", c)).map(AppManual.HowTo::id)).contains("seguimiento");
+        assertThat(AppManual.find(AssistantFixture.query("donde veo quien necesita apoyo", c)).map(AppManual.HowTo::id)).contains("follow-up");
     }
 
     @Test
     void generatingAndDownloadingAWorkshopIsOneAnswer() {
-        assertThat(AppManual.find(AssistantFixture.query("como genero un taller y lo descargo", AssistantFixture.context())).map(AppManual.HowTo::id)).contains("taller");
+        assertThat(AppManual.find(AssistantFixture.query("como genero un taller y lo descargo", AssistantFixture.context())).map(AppManual.HowTo::id)).contains("workshop");
     }
 }

@@ -16,10 +16,10 @@ final class NoCourseDataHandler implements IntentHandler {
             // Anything that is not about course data (general questions, "how does FairTeam work") goes on to the AI.
             if (!asksForCourseData(q)) return new FallbackHandler().handle(q, c);
             return Optional.of(AssistantReply.say("no-course", "Todavía no tienes ningún curso. Crea el primero (o carga los de demostración para explorar) y te ayudo con todo lo demás; mientras tanto puedo explicarte cómo funciona FairTeam.")
-                    .withActions(ReplyAction.of("navigate", "Ir a Mis cursos", "route", "cursos")));
+                    .withActions(ReplyAction.of("navigate", "Ir a Mis cursos", "route", "courses")));
         }
         if (c.analysis().summary().students() > 0 || q.has("importa", "sube", "cargar", "estudiantes", "lista", "equipo")) return Optional.empty();
         return Optional.of(AssistantReply.say("no-students", c.analysis().courseName() + " todavía no tiene estudiantes. Importa la lista del grupo y te ayudo con todo lo demás.")
-                .withActions(ReplyAction.of("navigate", "Ir a estudiantes", "route", "estudiantes")));
+                .withActions(ReplyAction.of("navigate", "Ir a estudiantes", "route", "students")));
     }
 }

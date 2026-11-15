@@ -26,7 +26,7 @@ final class HowToHandler implements IntentHandler {
             doIt = doIt.with("topic", topic);
         }
         if (doIt != null && !"guide".equals(doIt.kind())) actions.add(doIt);
-        actions.add(ReplyAction.of("navigate", "Llévame", "route", entry.route(), "vista", entry.vista(), "resaltar", entry.spot()));
+        actions.add(ReplyAction.of("navigate", "Llévame", "route", entry.route(), "view", entry.view(), "highlight", entry.spot()));
         AssistantReply reply = AssistantReply.say("how-to", entry.answer()).withActions(actions.toArray(ReplyAction[]::new));
         return doIt != null && "guide".equals(doIt.kind()) ? reply.andRun(doIt) : reply;
     }

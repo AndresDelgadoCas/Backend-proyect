@@ -19,6 +19,6 @@ final class PeriodComparisonHandler implements IntentHandler {
             if (!values.isEmpty()) parts.add(period + ": " + Grades.format(Grades.average(values)));
         }
         return Optional.of(AssistantReply.say("period-comparison", "Promedio del curso por corte. " + String.join(", ", parts) + ".")
-                .withActions(ReplyAction.of("navigate", "Ver tendencias", "route", "seguimiento", "vista", "tendencia")));
+                .withActions(ReplyAction.of("navigate", "Ver tendencias", "route", "follow-up", "view", "trend")));
     }
 }

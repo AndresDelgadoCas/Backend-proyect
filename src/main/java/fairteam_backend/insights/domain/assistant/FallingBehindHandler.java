@@ -13,7 +13,7 @@ final class FallingBehindHandler implements IntentHandler {
     @Override
     public Optional<AssistantReply> handle(AssistantQuery q, AssistantContext c) {
         if (!q.has("bajando", "bajado", "empeor", "cayendo", "riesgo", "preocup", "alerta")) return Optional.empty();
-        ReplyAction trends = ReplyAction.of("navigate", "Ver tendencias", "route", "seguimiento", "vista", "tendencia");
+        ReplyAction trends = ReplyAction.of("navigate", "Ver tendencias", "route", "follow-up", "view", "trend");
         List<StudentPerformance> down = c.analysis().students().stream().filter(p -> p.direction() == Direction.DOWN)
                 .sorted(Comparator.comparingDouble(StudentPerformance::delta)).toList();
         if (down.isEmpty()) {

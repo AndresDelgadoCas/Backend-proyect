@@ -15,7 +15,7 @@ final class DailyBriefingHandler implements IntentHandler {
         AssistantReply reply = AssistantReply.say("briefing", c.briefing());
         String topic = c.analysis().weakestSubject().map(SubjectAverage::name).orElse(null);
         return Optional.of(s.low() > 0
-                ? reply.withActions(Handlers.workshop("Preparar refuerzo", "workshop", Level.LOW, topic, null), ReplyAction.of("navigate", "Ver seguimiento", "route", "seguimiento"))
-                : reply.withActions(ReplyAction.of("navigate", "Ver seguimiento", "route", "seguimiento")));
+                ? reply.withActions(Handlers.workshop("Preparar refuerzo", "workshop", Level.LOW, topic, null), ReplyAction.of("navigate", "Ver seguimiento", "route", "follow-up"))
+                : reply.withActions(ReplyAction.of("navigate", "Ver seguimiento", "route", "follow-up")));
     }
 }

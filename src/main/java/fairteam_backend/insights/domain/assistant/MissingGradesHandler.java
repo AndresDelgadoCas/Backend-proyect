@@ -22,7 +22,7 @@ final class MissingGradesHandler implements IntentHandler {
         }
         return Optional.of(AssistantReply.say("missing-grades", Grades.plural(missing.size(), "estudiante no tiene", "estudiantes no tienen") + " notas todavía. Revisa si faltan en el archivo.")
                 .withItems(missing.stream().limit(8).map(p -> Handlers.item(p, "—", "sin notas")).toList())
-                .withActions(ReplyAction.of("navigate", "Ver quiénes", "route", "estudiantes", "filtro", "sin-notas")));
+                .withActions(ReplyAction.of("navigate", "Ver quiénes", "route", "students", "filter", "ungraded")));
     }
 
     /** One grade per topic and period is expected; fewer means something is still to be recorded. */

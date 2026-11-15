@@ -20,7 +20,7 @@ class FeedbackTemplateTest {
 
     @Test
     void factoryChoosesTheToneAndTheTemplateKeepsTheStructure() {
-        String warm = FeedbackTemplate.forTone(FeedbackTone.CERCANO).compose(student(Level.LOW, 2.5, Direction.FLAT), null, "Cálculo", "Prof. Ruiz");
+        String warm = FeedbackTemplate.forTone(FeedbackTone.FRIENDLY).compose(student(Level.LOW, 2.5, Direction.FLAT), null, "Cálculo", "Prof. Ruiz");
         String formal = FeedbackTemplate.forTone(FeedbackTone.FORMAL).compose(student(Level.LOW, 2.5, Direction.FLAT), null, "Cálculo", "Prof. Ruiz");
         assertThat(warm).startsWith("Hola, Laura:").contains("Un saludo,").endsWith("Prof. Ruiz");
         assertThat(formal).startsWith("Estimado(a) Laura Gómez:").contains("Cordialmente,");
@@ -29,22 +29,22 @@ class FeedbackTemplateTest {
 
     @Test
     void congratulatesStrongStudents() {
-        String text = FeedbackTemplate.forTone(FeedbackTone.CERCANO).compose(student(Level.HIGH, 4.6, Direction.UP), null, "Cálculo", "P");
+        String text = FeedbackTemplate.forTone(FeedbackTone.FRIENDLY).compose(student(Level.HIGH, 4.6, Direction.UP), null, "Cálculo", "P");
         assertThat(text).contains("Quería felicitarte").contains("has mejorado").doesNotContain("Te propongo");
     }
 
     @Test
     void asksAboutMissingGrades() {
-        String text = FeedbackTemplate.forTone(FeedbackTone.CERCANO).compose(student(Level.NO_DATA, null, Direction.UNKNOWN), null, "Cálculo", "P");
+        String text = FeedbackTemplate.forTone(FeedbackTone.FRIENDLY).compose(student(Level.NO_DATA, null, Direction.UNKNOWN), null, "Cálculo", "P");
         assertThat(text).contains("Aún no tengo notas tuyas");
     }
 
     @Test
     void parsesToneLeniently() {
         assertThat(FeedbackTone.parse("FORMAL")).isEqualTo(FeedbackTone.FORMAL);
-        assertThat(FeedbackTone.parse("lo que sea")).isEqualTo(FeedbackTone.CERCANO);
-        assertThat(FeedbackTone.parse(" Motivador ")).isEqualTo(FeedbackTone.MOTIVADOR);
-        assertThat(FeedbackTone.parse("ánimo")).isEqualTo(FeedbackTone.MOTIVADOR);
-        assertThat(FeedbackTone.parse(null)).isEqualTo(FeedbackTone.CERCANO);
+        assertThat(FeedbackTone.parse("lo que sea")).isEqualTo(FeedbackTone.FRIENDLY);
+        assertThat(FeedbackTone.parse(" Motivador ")).isEqualTo(FeedbackTone.MOTIVATIONAL);
+        assertThat(FeedbackTone.parse("ánimo")).isEqualTo(FeedbackTone.MOTIVATIONAL);
+        assertThat(FeedbackTone.parse(null)).isEqualTo(FeedbackTone.FRIENDLY);
     }
 }
