@@ -52,13 +52,18 @@ public class CourseService {
         return courses.save(existing);
     }
 
+    /** Each course is independent: deleting it removes its students, grades, rubrics, material and attendance with it. */
     @Transactional
     public void delete(Long id) {
         Course course = findById(id);
-        if (students.existsByCourse_Id(id) || grades.existsByCourse_Id(id)) {
-            throw new IllegalStateException("Mueve o elimina primero los estudiantes y las notas de este curso.");
-        }
+        List<Long> subjectIds = grades.subjectIdsOfCourse(id);
+        grades.deleteAllByCourseId(id);
+        students.deleteEvaluationsOfCourse(id);
+        students.deleteSubmissionsOfCourse(id);
+        students.deleteAllByCourseId(id);
         courses.delete(course);
+        courses.flush();
+        if (!subjectIds.isEmpty()) grades.deleteUnusedSubjects(subjectIds);
     }
 
     private static void validate(Course course) {
