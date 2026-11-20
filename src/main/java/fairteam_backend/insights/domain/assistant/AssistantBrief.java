@@ -19,7 +19,7 @@ import fairteam_backend.insights.domain.SubjectAverage;
 
 /**
  * Bridge between Búho and the AI interpreter. Builds the request with codes instead of identities (students
- * E1…, saved activities A1…, other courses C1…; no names, emails or individual grades leave the backend) and
+ * E1…, saved activities A1…, other courses C1…; no names or emails leave the backend; each student's grades summary does, so the AI can answer any data question) and
  * turns the {@link Interpretation} back into an {@link AssistantReply} the app runs.
  */
 public final class AssistantBrief {
@@ -36,7 +36,7 @@ public final class AssistantBrief {
 
     public record Topic(String name, Double average) { }
 
-    public record Student(String code, String level, String weakest) { }
+    public record Student(String code, String level, String weakest, String detail) { }
 
     public record Activity(String code, String kind, String title, String topic, String created) { }
 
@@ -85,7 +85,7 @@ public final class AssistantBrief {
                 + " en seguimiento, " + s.high() + " con buen progreso; " + s.fallingBehind() + " vienen bajando. Material subido: " + context.materials() + ".";
         List<Topic> topics = context.analysis().subjects().stream().map(t -> new Topic(t.name(), Grades.round1(t.average()))).toList();
         List<Student> studentCodes = students.entrySet().stream().map(e -> new Student(e.getKey(), levelWord(e.getValue().level()),
-                e.getValue().weakest() == null ? "" : e.getValue().weakest().name())).toList();
+                e.getValue().weakest() == null ? "" : e.getValue().weakest().name(), detail(e.getValue()))).toList();
         List<Activity> activityCodes = activities.entrySet().stream().map(e -> new Activity(e.getKey(), e.getValue().kind(), e.getValue().title(),
                 e.getValue().topic() == null ? "" : e.getValue().topic(), e.getValue().created() == null ? "" : DAY.format(e.getValue().created()))).toList();
         List<Course> courseCodes = courses.entrySet().stream().map(e -> new Course(e.getKey(), e.getValue().name())).toList();
@@ -228,6 +228,32 @@ public final class AssistantBrief {
             default -> a.kind();
         };
         return what + (topic.isBlank() ? "" : " sobre " + topic);
+    }
+
+    /** Everything the course reading knows about one student, in one line: the AI answers data questions from this. */
+    private String detail(StudentPerformance p) {
+        List<String> parts = new ArrayList<>();
+        parts.add(p.average() == null ? "sin promedio" : "promedio " + Grades.round1(p.average()));
+        parts.add(p.gradeCount() + " notas");
+        if (p.hasGrades()) parts.add("riesgo " + p.risk() + "/100");
+        switch (p.direction()) {
+            case DOWN -> parts.add("viene bajando" + (p.delta() == null ? "" : " (" + Grades.round1(p.delta()) + ")"));
+            case UP -> parts.add("viene mejorando" + (p.delta() == null ? "" : " (+" + Grades.round1(p.delta()) + ")"));
+            case FLAT -> parts.add("estable");
+            default -> { }
+        }
+        if (!p.periods().isEmpty()) parts.add("cortes: " + String.join(", ", p.periods().stream().map(x -> x.period() + " " + Grades.round1(x.average())).toList()));
+        if (!p.subjects().isEmpty()) parts.add("temas: " + String.join(", ", p.subjects().stream().map(x -> x.name() + " " + Grades.round1(x.average())).toList()));
+        var attendance = context.attendance().get(p.student().id());
+        if (attendance != null && attendance.sessions() > 0) parts.add("asistencia " + attendance.percent() + "% (" + attendance.absent() + " faltas)");
+        var projection = context.projections().get(p.student().id());
+        if (projection != null) {
+            parts.add("definitiva parcial " + Grades.round1(projection.current()));
+            if (projection.needed() != null) parts.add("necesita " + Grades.round1(projection.needed()) + " en lo que resta");
+            parts.add("estado " + projection.status());
+        }
+        String line = String.join("; ", parts);
+        return line.length() > 450 ? line.substring(0, 450) : line;
     }
 
     private static String levelWord(Level level) {
