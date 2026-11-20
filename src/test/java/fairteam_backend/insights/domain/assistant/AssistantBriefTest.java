@@ -71,7 +71,8 @@ class AssistantBriefTest {
     void decidesWhenTheAiIsWorthAsking() {
         AssistantContext fresh = AssistantFixture.context();
         assertThat(AssistantBrief.worthInterpreting("zzz", AssistantReply.say("fallback", ""), fresh)).isTrue();
-        assertThat(AssistantBrief.worthInterpreting("¿quién viene bajando?", AssistantReply.say("falling-behind", ""), fresh)).isFalse();
+        assertThat(AssistantBrief.worthInterpreting("¿quién viene bajando?", AssistantReply.say("falling-behind", ""), fresh)).isTrue();
+        assertThat(AssistantBrief.worthInterpreting("abre seguimiento", AssistantReply.say("navigate", ""), fresh)).isFalse();
         assertThat(AssistantBrief.worthInterpreting("y para ella también", AssistantReply.say("student-status", ""), ctx)).isTrue();
         assertThat(AssistantBrief.worthInterpreting("dale", AssistantReply.say("follow-up", ""), ctx)).isFalse();
         assertThat(AssistantBrief.worthInterpreting("crea un taller de derivadas con tres ejercicios en parejas y una pregunta de cierre",

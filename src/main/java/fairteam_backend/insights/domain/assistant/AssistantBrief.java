@@ -59,9 +59,18 @@ public final class AssistantBrief {
         indexNames();
     }
 
-    /** Long requests, references to earlier turns ("hazlo para ella") and anything the rules did not get go to the AI. */
+    /** Replies the rules give with certainty (greetings, help, navigation, wizards); everything else is checked by the AI first. */
+    private static final List<String> RULES_ARE_ENOUGH = List.of("follow-up", "empty", "small-talk", "briefing", "how-to", "help", "navigate", "switch-course",
+            "courses-list", "no-course", "no-students", "create-rubric", "create-activity", "draft-message", "report");
+
+    /**
+     * The rules match on keywords and can answer a different question than the one asked ("cuántos cursos tengo"
+     * used to get a list of students). So the AI reads every question about the course and chooses the action;
+     * the rules still run underneath it to compute the data, and answer alone only when the AI is unavailable.
+     */
     public static boolean worthInterpreting(String question, AssistantReply ruleReply, AssistantContext context) {
         if (ruleReply == null || "fallback".equals(ruleReply.intent())) return true;
+        if (!RULES_ARE_ENOUGH.contains(ruleReply.intent())) return true;
         if (List.of("follow-up", "empty", "small-talk", "briefing", "how-to", "help").contains(ruleReply.intent())) return false;
         String text = AssistantQuery.normalize(question);
         if (text.split(" ").length >= 12) return true;
