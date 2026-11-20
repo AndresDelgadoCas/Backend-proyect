@@ -40,9 +40,16 @@ class BuhoInterpreterTest {
     }
 
     @Test
-    void clearQuestionsStayWithTheRulesAndNeverReachTheAi() {
+    void courseQuestionsAreCheckedByTheAiAndFallBackToTheRulesWhenItIsDown() {
         AssistantReply reply = service(Optional.empty()).ask(1, "¿Quién viene bajando?", "S", List.of());
         assertThat(reply.intent()).isEqualTo("falling-behind");
+        assertThat(seen).hasSize(1);
+    }
+
+    @Test
+    void greetingsAndNavigationStayWithTheRulesAndNeverReachTheAi() {
+        AssistantReply reply = service(Optional.empty()).ask(1, "hola", "S", List.of());
+        assertThat(reply.intent()).isEqualTo("small-talk");
         assertThat(seen).isEmpty();
     }
 
